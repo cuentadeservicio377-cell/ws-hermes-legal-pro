@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "key": "carta_cobranza",
+    "label": "Carta de cobranza",
+    "area": "Cobranza",
+    "materia": "civil",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "clause_section",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "carta_cobranza",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Notificación de Adeudo",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Monto y Concepto",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Plazo para Regularizar",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Consecuencias de Incumplimiento",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para Carta de cobranza. Personalizar según caso específico."
+}

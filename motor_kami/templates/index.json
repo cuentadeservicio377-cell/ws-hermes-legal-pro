@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "1",
+  "templates": [
+    {
+      "key": "nda",
+      "label": "NDA / Acuerdo de confidencialidad",
+      "area": "Contratos",
+      "materia": "corporativo",
+      "file": "nda.json"
+    },
+    {
+      "key": "confidencialidad",
+      "label": "Cláusula de confidencialidad",
+      "area": "Contratos",
+      "materia": "corporativo",
+      "file": "confidencialidad.json"
+    },
+    {
+      "key": "prestacion_servicios",
+      "label": "Prestación de servicios",
+      "area": "Contratos",
+      "materia": "corporativo",
+      "file": "prestacion_servicios.json"
+    },
+    {
+      "key": "terminos_condiciones",
+      "label": "Términos y condiciones",
+      "area": "Contratos",
+      "materia": "corporativo",
+      "file": "terminos_condiciones.json"
+    },
+    {
+      "key": "acta_asamblea",
+      "label": "Acta de asamblea",
+      "area": "Corporativo",
+      "materia": "corporativo",
+      "file": "acta_asamblea.json"
+    },
+    {
+      "key": "poder_notarial",
+      "label": "Poder notarial",
+      "area": "Corporativo",
+      "materia": "corporativo",
+      "file": "poder_notarial.json"
+    },
+    {
+      "key": "estatutos_sociales",
+      "label": "Estatutos sociales",
+      "area": "Corporativo",
+      "materia": "corporativo",
+      "file": "estatutos_sociales.json"
+    },
+    {
+      "key": "convenio_accionistas",
+      "label": "Convenio de accionistas",
+      "area": "Corporativo",
+      "materia": "corporativo",
+      "file": "convenio_accionistas.json"
+    },
+    {
+      "key": "contrato_trabajo",
+      "label": "Contrato de trabajo",
+      "area": "Laboral",
+      "materia": "laboral",
+      "file": "contrato_trabajo.json"
+    },
+    {
+      "key": "reglamento_interior",
+      "label": "Reglamento interior de trabajo",
+      "area": "Laboral",
+      "materia": "laboral",
+      "file": "reglamento_interior.json"
+    },
+    {
+      "key": "finiquito",
+      "label": "Finiquito",
+      "area": "Laboral",
+      "materia": "laboral",
+      "file": "finiquito.json"
+    },
+    {
+      "key": "nda_laboral",
+      "label": "NDA laboral",
+      "area": "Laboral",
+      "materia": "laboral",
+      "file": "nda_laboral.json"
+    },
+    {
+      "key": "convenio_pagos",
+      "label": "Convenio de pagos",
+      "area": "Cobranza",
+      "materia": "civil",
+      "file": "convenio_pagos.json"
+    },
+    {
+      "key": "garantias",
+      "label": "Garantías",
+      "area": "Contratos",
+      "materia": "civil",
+      "file": "garantias.json"
+    },
+    {
+      "key": "arrendamiento",
+      "label": "Arrendamiento",
+      "area": "Contratos",
+      "materia": "civil",
+      "file": "arrendamiento.json"
+    },
+    {
+      "key": "calendario_cobranza",
+      "label": "Calendario de cobranza",
+      "area": "Cobranza",
+      "materia": "civil",
+      "file": "calendario_cobranza.json"
+    },
+    {
+      "key": "carta_cobranza",
+      "label": "Carta de cobranza",
+      "area": "Cobranza",
+      "materia": "civil",
+      "file": "carta_cobranza.json"
+    },
+    {
+      "key": "pagare",
+      "label": "Pagaré",
+      "area": "Cobranza",
+      "materia": "mercantil",
+      "file": "pagare.json"
+    },
+    {
+      "key": "bitacora_entregas",
+      "label": "Bitácora de entregas",
+      "area": "Documentación",
+      "materia": "corporativo",
+      "file": "bitacora_entregas.json"
+    },
+    {
+      "key": "expediente_materialidad",
+      "label": "Expediente de materialidad",
+      "area": "Fiscal",
+      "materia": "fiscal",
+      "file": "expediente_materialidad.json"
+    },
+    {
+      "key": "carta_sat",
+      "label": "Carta al SAT",
+      "area": "Fiscal",
+      "materia": "fiscal",
+      "file": "carta_sat.json"
+    },
+    {
+      "key": "aviso_privacidad",
+      "label": "Aviso de privacidad",
+      "area": "Privacidad",
+      "materia": "privacidad",
+      "file": "aviso_privacidad.json"
+    },
+    {
+      "key": "formato_arco",
+      "label": "Formato ARCO",
+      "area": "Privacidad",
+      "materia": "privacidad",
+      "file": "formato_arco.json"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "key": "convenio_pagos",
+    "label": "Convenio de pagos",
+    "area": "Cobranza",
+    "materia": "civil",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "clause_section",
+    "payment_table",
+    "signature_block",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "convenio_pagos",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Acreedor y Deudor",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Monto Adeudado",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Plan de Pagos",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Intereses",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Incumplimiento",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Jurisdicción",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para Convenio de pagos. Personalizar según caso específico."
+}

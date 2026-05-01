@@ -63,6 +63,15 @@ else
 fi
 
 echo ""
+echo "📦 Instalando dependencias de Python..."
+
+# Instalar dependencias del Motor Kami
+pip3 install --user fastapi uvicorn pydantic weasyprint python-docx openpyxl 2>/dev/null || \
+pip3 install fastapi uvicorn pydantic weasyprint python-docx openpyxl
+
+echo "✓ Dependencias de Python instaladas"
+
+echo ""
 echo "🚀 Instalando Hermes Agent..."
 
 # Instalar Hermes si no está instalado
@@ -162,8 +171,30 @@ echo "📁 Creando estructura de carpetas..."
 # Crear carpetas legales
 mkdir -p "$HOME/WillowLegal"/{00_Sistema,01_Clientes,02_Administracion,03_Biblioteca_Legal,04_Agentes_Onyx,05_Backups}
 mkdir -p "$HOME/WillowLegal/02_Administracion"/{Plantillas,Formatos,Manuales,Reportes}
+mkdir -p "$HOME/WillowLegal/00_Sistema"/{Motor_Kami,Datos,Excel,Schemas,Scripts}
 
 echo "✓ Carpetas creadas en ~/WillowLegal/"
+
+echo ""
+echo "🔧 Configurando Motor Kami..."
+
+# Copiar motor Kami al sistema
+if [ -d "motor_kami" ]; then
+    cp -r motor_kami "$HOME/WillowLegal/00_Sistema/"
+    echo "✓ Motor Kami copiado"
+fi
+
+# Copiar datos
+if [ -d "datos" ]; then
+    cp -r datos/* "$HOME/WillowLegal/00_Sistema/Datos/" 2>/dev/null || true
+    echo "✓ Datos copiados"
+fi
+
+# Copiar Excel maestro
+if [ -f "excel/Centro_Operativo_Maestro_Willow_v4.xlsx" ]; then
+    cp "excel/Centro_Operativo_Maestro_Willow_v4.xlsx" "$HOME/WillowLegal/00_Sistema/Excel/"
+    echo "✓ Excel maestro copiado"
+fi
 
 echo ""
 echo "🔍 Verificación final..."
@@ -189,7 +220,11 @@ echo ""
 echo "3. Iniciar gateway:"
 echo "   hermes gateway start"
 echo ""
-echo "4. Probar:"
+echo "4. Iniciar el dashboard:"
+echo "   cd ~/WillowLegal/00_Sistema/Motor_Kami"
+echo "   python3 dashboard/backend/app.py"
+echo ""
+echo "5. Probar:"
 echo "   hermes chat -q \"Hola, estoy configurando Hermes Legal Pro\""
 echo ""
 echo "Documentación:"

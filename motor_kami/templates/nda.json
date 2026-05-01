@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "key": "nda",
+    "label": "NDA / Acuerdo de confidencialidad",
+    "area": "Contratos",
+    "materia": "corporativo",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "clause_section",
+    "signature_block",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "nda",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Objeto",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Obligaciones de las Partes",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Duración",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Penalización",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Jurisdicción",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Disposiciones Generales",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para NDA / Acuerdo de confidencialidad. Personalizar según caso específico."
+}

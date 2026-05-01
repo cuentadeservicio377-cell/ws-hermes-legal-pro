@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "key": "poder_notarial",
+    "label": "Poder notarial",
+    "area": "Corporativo",
+    "materia": "corporativo",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "clause_section",
+    "signature_block",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "poder_notarial",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Antecedentes",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Resoluciones",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Facultades",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para Poder notarial. Personalizar según caso específico."
+}

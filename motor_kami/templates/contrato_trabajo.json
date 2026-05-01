@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "key": "contrato_trabajo",
+    "label": "Contrato de trabajo",
+    "area": "Laboral",
+    "materia": "laboral",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "clause_section",
+    "signature_block",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "contrato_trabajo",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Relación Laboral",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Puesto y Funciones",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Remuneración",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Jornada",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Vacaciones",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Confidencialidad",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Terminación",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para Contrato de trabajo. Personalizar según caso específico."
+}

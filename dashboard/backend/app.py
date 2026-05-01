@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-HERMES LEGAL PRO — Backend API v1.0
-Dashboard visual para abogados: Meet, documentos, matters, calendario, admin
+HERMES LEGAL PRO — Backend API v2.0
+Dashboard visual + Motor Kami v3 integrado
+FastAPI + JSON local + Motor Kami v3 + WeasyPrint
 """
 
 import json
 import os
 import sys
+import subprocess
 from pathlib import Path
 from datetime import datetime, date, timedelta
 from typing import Optional, List, Dict, Any
@@ -19,8 +21,12 @@ from pydantic import BaseModel
 # ── Paths ─────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "datos"
+MOTOR_DIR = BASE_DIR / "motor_kami"
 CLIENTES_DIR = Path.home() / "WillowLegal" / "01_Clientes"
 PLANTILLAS_DIR = Path.home() / "WillowLegal" / "02_Administracion" / "Plantillas"
+
+# Añadir motor al path para importar
+sys.path.insert(0, str(MOTOR_DIR))
 
 # Crear dirs si no existen
 for d in [DATA_DIR, CLIENTES_DIR, PLANTILLAS_DIR]:
@@ -40,8 +46,8 @@ for f in [MATTERS_FILE, REUNIONES_FILE, ALERTAS_FILE, DOCUMENTOS_FILE]:
 
 app = FastAPI(
     title="Hermes Legal Pro — Dashboard API",
-    description="API para dashboard visual de abogados",
-    version="1.0.0"
+    description="API para dashboard visual de abogados con Motor Kami v3",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -93,11 +99,24 @@ class MatterInput(BaseModel):
     deadline: Optional[str] = None
     prioridad: str = "media"
 
+class GenerarDocumentoRequest(BaseModel):
+    template_key: str
+    output_filename: Optional[str] = None
+    datos_extra: Optional[Dict[str, Any]] = {}
+
 # ── Endpoints ───────────────────────────────────────────────
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "producto": "Hermes Legal Pro", "version": "1.0.0"}
+    motor_ok = (MOTOR_DIR / "motor_kami.py").exists()
+    templates_count = len(list((MOTOR_DIR / "templates").glob("*.json"))) if (MOTOR_DIR / "templates").exists() else 0
+    return {
+        "status": "ok",
+        "producto": "Hermes Legal Pro",
+        "version": "2.0.0",
+        "motor_kami": "ok" if motor_ok else "no_encontrado",
+        "templates_disponibles": templates_count
+    }
 
 # ── Dashboard ───────────────────────────────────────────────
 @app.get("/api/dashboard")
@@ -110,17 +129,12 @@ def dashboard():
     
     hoy = date.today().isoformat()
     
-    # Métricas
     matters_activos = [m for m in matters if m.get("estado") == "activo"]
     matters_urgentes = [m for m in matters_activos if m.get("prioridad") == "alta"]
-    
     reuniones_hoy = [r for r in reuniones if r.get("fecha") == hoy]
-    
     docs_pendientes = [d for d in documentos if d.get("estado") == "borrador"]
-    
     alertas_activas = [a for a in alertas if not a.get("resuelta")]
     
-    # Próximos plazos (próximos 7 días)
     proximos_plazos = []
     for m in matters_activos:
         if m.get("deadline"):
@@ -181,7 +195,6 @@ def create_matter(data: MatterInput):
     matters.append(matter)
     save_json(MATTERS_FILE, matters)
     
-    # Crear carpeta física
     crear_carpeta_cliente(data.cliente)
     
     return matter
@@ -200,7 +213,7 @@ def list_reuniones(matter_id: Optional[str] = None):
     reuniones = load_json(REUNIONES_FILE)
     if matter_id:
         reuniones = [r for r in reuniones if r.get("matter_id") == matter_id]
-    return reuniones[::-1]  # Más recientes primero
+    return reuniones[::-1]
 
 @app.post("/api/reuniones")
 def create_reunion(data: ReunionInput):
@@ -223,7 +236,6 @@ def create_reunion(data: ReunionInput):
     reuniones.append(reunion)
     save_json(REUNIONES_FILE, reuniones)
     
-    # Si hay matter_id, actualizar el matter
     if data.matter_id:
         matters = load_json(MATTERS_FILE)
         for m in matters:
@@ -282,40 +294,124 @@ def get_documento(doc_id: str):
             return d
     raise HTTPException(status_code=404, detail="Documento no encontrado")
 
-# ── Templates ─────────────────────────────────────────────
+# ── Motor Kami Integration ──────────────────────────────────
+
 @app.get("/api/templates")
 def list_templates():
-    """Lista los 23 templates legales disponibles"""
-    return [
-        {"key": "prestacion_servicios", "nombre": "Contrato de Prestación de Servicios", "categoria": "Contratos"},
-        {"key": "confidencialidad", "nombre": "Acuerdo de Confidencialidad (NDA)", "categoria": "Contratos"},
-        {"key": "nda", "nombre": "NDA Corporativo", "categoria": "Contratos"},
-        {"key": "trabajo", "nombre": "Contrato de Trabajo", "categoria": "Laboral"},
-        {"key": "arrendamiento", "nombre": "Contrato de Arrendamiento", "categoria": "Inmobiliario"},
-        {"key": "pagaré", "nombre": "Pagaré", "categoria": "Cobranza"},
-        {"key": "carta_cobranza", "nombre": "Carta de Cobranza", "categoria": "Cobranza"},
-        {"key": "convenio_pagos", "nombre": "Convenio de Pagos", "categoria": "Cobranza"},
-        {"key": "acta_asamblea", "nombre": "Acta de Asamblea", "categoria": "Corporativo"},
-        {"key": "poder_notarial", "nombre": "Poder Notarial", "categoria": "Corporativo"},
-        {"key": "estatutos", "nombre": "Estatutos Sociales", "categoria": "Corporativo"},
-        {"key": "convenio_accionistas", "nombre": "Convenio de Accionistas", "categoria": "Corporativo"},
-        {"key": "reglamento_interior", "nombre": "Reglamento Interior", "categoria": "Laboral"},
-        {"key": "finiquito", "nombre": "Finiquito", "categoria": "Laboral"},
-        {"key": "nda_laboral", "nombre": "NDA Laboral", "categoria": "Laboral"},
-        {"key": "garantia", "nombre": "Garantía", "categoria": "Civil"},
-        {"key": "calendario_cobranza", "nombre": "Calendario de Cobranza", "categoria": "Cobranza"},
-        {"key": "bitacora", "nombre": "Bitácora de Entregas", "categoria": "Corporativo"},
-        {"key": "expediente_sat", "nombre": "Expediente de Materialidad", "categoria": "Fiscal"},
-        {"key": "carta_sat", "nombre": "Carta SAT", "categoria": "Fiscal"},
-        {"key": "aviso_privacidad", "nombre": "Aviso de Privacidad", "categoria": "Privacidad"},
-        {"key": "formato_arco", "nombre": "Formato ARCO", "categoria": "Privacidad"},
-        {"key": "terminos_condiciones", "nombre": "Términos y Condiciones", "categoria": "Corporativo"}
-    ]
+    """Lista los templates legales disponibles desde Motor Kami"""
+    templates_dir = MOTOR_DIR / "templates"
+    if not templates_dir.exists():
+        return {"templates": [], "count": 0}
+    
+    templates = []
+    index_path = templates_dir / "index.json"
+    if index_path.exists():
+        with open(index_path, "r", encoding="utf-8") as f:
+            index = json.load(f)
+        templates = index.get("templates", [])
+    else:
+        # Fallback: leer archivos JSON directamente
+        for t in sorted(templates_dir.glob("*.json")):
+            if t.name == "index.json":
+                continue
+            with open(t, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            templates.append({
+                "key": t.stem,
+                "label": data.get("titulo", t.stem),
+                "area": data.get("area", "General"),
+                "materia": data.get("materia", "General")
+            })
+    
+    return {"templates": templates, "count": len(templates)}
+
+@app.get("/api/templates/{key}")
+def get_template(key: str):
+    template_path = MOTOR_DIR / "templates" / f"{key}.json"
+    if not template_path.exists():
+        raise HTTPException(status_code=404, detail=f"Template '{key}' no encontrado")
+    with open(template_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+@app.post("/api/matter/{matter_id}/generar-documento")
+def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
+    """Genera un documento PDF usando Motor Kami v3"""
+    matters = load_json(MATTERS_FILE)
+    matter = None
+    for m in matters:
+        if m.get("id") == matter_id:
+            matter = m
+            break
+    
+    if not matter:
+        raise HTTPException(status_code=404, detail="Matter no encontrado")
+    
+    template_path = MOTOR_DIR / "templates" / f"{req.template_key}.json"
+    if not template_path.exists():
+        raise HTTPException(status_code=404, detail=f"Template '{req.template_key}' no encontrado")
+    
+    # Preparar output
+    output_dir = MOTOR_DIR / "output"
+    output_dir.mkdir(exist_ok=True)
+    filename = req.output_filename or f"{matter_id}_{req.template_key}_{date.today().strftime('%Y%m%d')}.pdf"
+    output_path = output_dir / filename
+    
+    # Construir bloques para Kami
+    blocks = construir_bloques_desde_matter(matter, req.template_key, req.datos_extra)
+    
+    # Generar via Motor Kami CLI
+    try:
+        json_input = json.dumps({"blocks": blocks, "options": {"titulo": f"Documento {req.template_key}"}})
+        result = subprocess.run(
+            [sys.executable, str(MOTOR_DIR / "motor_kami.py"), "--input", "-", "--output", str(output_path)],
+            input=json_input,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"Error Motor Kami: {result.stderr}")
+        
+        # Actualizar documentos del matter
+        documentos = load_json(DOCUMENTOS_FILE)
+        doc = {
+            "id": f"DOC-{len(documentos)+1:04d}",
+            "matter_id": matter_id,
+            "template_key": req.template_key,
+            "estado": "generado",
+            "fecha_creacion": datetime.now().isoformat(),
+            "ruta_pdf": str(output_path),
+            "ruta_editable": str(output_path.with_suffix(".html"))
+        }
+        documentos.append(doc)
+        save_json(DOCUMENTOS_FILE, documentos)
+        
+        return {
+            "success": True,
+            "file_path": str(output_path),
+            "file_size_kb": round(output_path.stat().st_size / 1024, 1),
+            "documento_id": doc["id"]
+        }
+        
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Timeout generando documento")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
+
+@app.post("/api/kami/validate")
+def validate_document(data: Dict[str, Any]):
+    """Valida sustancia legal de un documento"""
+    try:
+        from blocks import validar_sustancia
+        resultado = validar_sustancia(data)
+        return resultado
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Motor Kami no disponible")
 
 # ── Carpetas / Explorador ─────────────────────────────────
 @app.get("/api/carpetas/{matter_id}")
 def list_carpeta(matter_id: str):
-    """Lista archivos en la carpeta del cliente"""
     matters = load_json(MATTERS_FILE)
     matter = None
     for m in matters:
@@ -361,11 +457,9 @@ def calcular_dias_restantes(fecha_str: str) -> Optional[int]:
         return None
 
 def safe_filename(nombre: str) -> str:
-    """Convierte nombre de cliente a nombre de carpeta seguro"""
     return "".join(c for c in nombre if c.isalnum() or c in " _-").strip()
 
 def crear_carpeta_cliente(cliente: str):
-    """Crea estructura de carpetas para un cliente nuevo"""
     safe = safe_filename(cliente)
     base = CLIENTES_DIR / safe
     
@@ -393,6 +487,59 @@ def crear_carpeta_cliente(cliente: str):
         (base / sub).mkdir(parents=True, exist_ok=True)
     
     return base
+
+def construir_bloques_desde_matter(matter: Dict, template_key: str, datos_extra: Dict) -> List[Dict]:
+    """Construye bloques para Motor Kami desde un matter"""
+    blocks = []
+    
+    # Cover page
+    blocks.append({
+        "type": "cover_page",
+        "data": {
+            "titulo": f"{template_key.replace('_', ' ').title()}",
+            "cliente": matter.get("cliente", ""),
+            "matter_id": matter.get("id", ""),
+            "fecha": date.today().strftime("%d de %B de %Y")
+        }
+    })
+    
+    # Parties block
+    blocks.append({
+        "type": "parties_block",
+        "data": {
+            "prestador": {
+                "nombre": "We Law S.C.",
+                "rfc": "WEL123456ABC",
+                "domicilio": "Ciudad de México"
+            },
+            "cliente": {
+                "nombre": matter.get("cliente", ""),
+                "rfc": datos_extra.get("rfc_cliente", "[PENDIENTE]"),
+                "domicilio": datos_extra.get("domicilio_cliente", "[PENDIENTE]")
+            }
+        }
+    })
+    
+    # Cláusulas básicas
+    blocks.append({
+        "type": "clause_section",
+        "data": {
+            "numero": "1",
+            "titulo": "Objeto",
+            "subclausulas": [matter.get("descripcion", "Servicios legales profesionales")]
+        }
+    })
+    
+    # Signature block
+    blocks.append({
+        "type": "signature_block",
+        "data": {
+            "prestador": {"nombre": "We Law S.C.", "puesto": "Representante Legal"},
+            "cliente": {"nombre": matter.get("cliente", ""), "puesto": "Representante Legal"}
+        }
+    })
+    
+    return blocks
 
 # ── Mount SPA ─────────────────────────────────────────────
 FRONTEND_DIR = BASE_DIR / "frontend"

@@ -32,20 +32,34 @@ hermes-legal-pro-v1.0.0/
 ├── hermes-legal-pro-profile.tar.gz    # Perfil preconfigurado
 │
 ├── installer/
-│   └── install-mac.sh          # Script de instalación macOS
+│   ├── install-mac.sh          # Script de instalación macOS
+│   └── install-mac-simple.sh   # Instalación rápida
 │
 ├── config/
-│   ├── config.yaml             # Configuración optimizada
 │   └── .env.template           # Template de variables de entorno
+│
+├── dashboard/
+│   ├── backend/app.py          # API FastAPI v2.0 (con Motor Kami)
+│   ├── frontend/index.html     # Dashboard visual SPA
+│   └── spa/                    # SPA fallback
+│
+├── motor_kami/                 # Motor de documentos Kami v3
+│   ├── motor_kami.py           # Generador PDF con WeasyPrint
+│   ├── blocks.py               # Renderizado de bloques
+│   ├── bridge_api.py           # API FastAPI del motor
+│   ├── templates/              # 23 templates JSON
+│   └── output/                 # PDFs generados
 │
 ├── skills/
 │   ├── hermes-legal-pro/       # Skill maestra de orquestación
-│   └── willow-legal-complete/  # Sistema legal completo
+│   └── willow-legal-complete/  # Sistema legal completo + Motor Kami
 │
-├── templates/                   # 23 templates legales mexicanos
-├── excel/                       # Excel maestro preconfigurado
-├── scripts/                     # Scripts utilitarios
-└── docs/                        # Documentación adicional
+├── datos/                        # Datos JSON (matters, reuniones)
+├── schemas/                      # Esquemas de datos
+├── scripts/
+│   └── willow_standalone.py    # Script principal standalone
+├── excel/                        # Excel maestro preconfigurado
+└── docs/                         # Documentación adicional
 ```
 
 ---
@@ -68,6 +82,11 @@ cp config/.env.template ~/.hermes/.env
 # 4. Iniciar
 hermes profile use legal-pro
 hermes gateway start
+
+# 5. Iniciar dashboard (en otra terminal)
+cd ~/WillowLegal/00_Sistema/Motor_Kami
+python3 dashboard/backend/app.py
+# Abrir http://localhost:8082 en tu navegador
 ```
 
 Ver `INSTALL.md` para instrucciones detalladas.

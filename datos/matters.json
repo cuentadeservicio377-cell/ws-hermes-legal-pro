@@ -1,0 +1,496 @@
+{
+  "matters": [
+    {
+      "matter_id": "PRAG-001",
+      "cliente": {
+        "razon_social": "Pragma Studio",
+        "representante": "Juan Antonio Angel Ramirez",
+        "email": "juan@pragmaestudio.com",
+        "rfc": "AARJ851123XXX",
+        "domicilio_fiscal": "Guadalajara, Jalisco",
+        "telefono": "33XXXXXXX",
+        "sector": "Arquitectura / Restaurantes",
+        "tamano": "SME"
+      },
+      "asunto": {
+        "area_practica": "Mercantil / Contratos / Cobranza",
+        "tipo": "contrato",
+        "descripcion": "Formalizar infraestructura legal de Pragma Studio para prevenir disputas y profesionalizar operación",
+        "status": "active",
+        "prioridad": "high",
+        "fecha_apertura": "2025-09-29",
+        "deadline_principal": "2025-12-15"
+      },
+      "problemas": [
+        {
+          "id": 1,
+          "descripcion": "Contrato actual de 24 páginas, percibido como 'hostil'",
+          "impacto": "Fricción en venta, clientes reacios a firmar",
+          "documento_requerido": "Contrato ligero + Términos y Condiciones separados",
+          "status": "pendiente",
+          "prioridad": "high"
+        },
+        {
+          "id": 2,
+          "descripcion": "Sin actas de entrega firmadas por etapa",
+          "impacto": "Clientes no aceptan entregables, disputas de pago",
+          "documento_requerido": "Actas de entrega por etapa (3 formatos: conceptual, desarrollo, constructiva)",
+          "status": "pendiente",
+          "prioridad": "high"
+        },
+        {
+          "id": 3,
+          "descripcion": "Sin protocolo de cobranza escalonada",
+          "impacto": "Clientes no pagan a tiempo, no hay presión formal",
+          "documento_requerido": "Protocolo de cobranza + plantillas WhatsApp/Email/Carta",
+          "status": "pendiente",
+          "prioridad": "medium"
+        },
+        {
+          "id": 4,
+          "descripcion": "Sin cláusula de intereses moratorios",
+          "impacto": "Deuda no genera costo adicional, clientes dilatan",
+          "documento_requerido": "Contrato con intereses moratorios",
+          "status": "pendiente",
+          "prioridad": "medium"
+        },
+        {
+          "id": 5,
+          "descripcion": "Sin contrato de subcontratistas",
+          "impacto": "Responsabilidad difusa con branding/otros proveedores",
+          "documento_requerido": "Contrato de subcontratación",
+          "status": "pendiente",
+          "prioridad": "medium"
+        },
+        {
+          "id": 6,
+          "descripcion": "Disputa activa con cliente 'Andy'",
+          "impacto": "$80,000-$200,000 en riesgo",
+          "documento_requerido": "Estrategia de respuesta legal + correo formal",
+          "status": "urgente",
+          "prioridad": "critical"
+        },
+        {
+          "id": 7,
+          "descripcion": "Sin acta de cierre de proyecto",
+          "impacto": "Proyectos quedan 'colgados' sin cierre formal",
+          "documento_requerido": "Acta de cierre de proyecto",
+          "status": "pendiente",
+          "prioridad": "low"
+        },
+        {
+          "id": 8,
+          "descripcion": "Clientes internacionales (USA) sin mediación",
+          "impacto": "Riesgo de litigio costoso en el extranjero",
+          "documento_requerido": "Cláusula ICC/medición internacional",
+          "status": "pendiente",
+          "prioridad": "low"
+        }
+      ],
+      "documentos": [
+        {
+          "id": "DOC-001",
+          "tipo": "contrato_prestacion_servicios",
+          "nombre": "Contrato de Prestación de Servicios (ligero)",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "prestacion_servicios",
+          "prioridad": "high"
+        },
+        {
+          "id": "DOC-002",
+          "tipo": "terminos_condiciones",
+          "nombre": "Términos y Condiciones",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "terminos_condiciones",
+          "prioridad": "high"
+        },
+        {
+          "id": "DOC-003",
+          "tipo": "acta_entrega_conceptual",
+          "nombre": "Acta de Entrega - Fase Conceptual",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "bitacora_entregas",
+          "prioridad": "high"
+        },
+        {
+          "id": "DOC-004",
+          "tipo": "acta_entrega_desarrollo",
+          "nombre": "Acta de Entrega - Fase Desarrollo",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "bitacora_entregas",
+          "prioridad": "high"
+        },
+        {
+          "id": "DOC-005",
+          "tipo": "acta_entrega_constructiva",
+          "nombre": "Acta de Entrega - Fase Constructiva",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "bitacora_entregas",
+          "prioridad": "high"
+        },
+        {
+          "id": "DOC-006",
+          "tipo": "protocolo_cobranza",
+          "nombre": "Protocolo de Cobranza Escalonada",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "convenio_pagos",
+          "prioridad": "medium"
+        },
+        {
+          "id": "DOC-007",
+          "tipo": "contrato_subcontratistas",
+          "nombre": "Contrato de Subcontratación",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "prestacion_servicios",
+          "prioridad": "medium"
+        },
+        {
+          "id": "DOC-008",
+          "tipo": "acta_cierre",
+          "nombre": "Acta de Cierre de Proyecto",
+          "status": "pendiente",
+          "ubicacion": "02_Contratos/Borradores/",
+          "fecha_limite": "2025-12-15",
+          "template": "bitacora_entregas",
+          "prioridad": "low"
+        }
+      ],
+      "plazos": [
+        {
+          "id": "PLZ-001",
+          "descripcion": "Entrega correo respuesta Andy",
+          "fecha": "2025-11-05",
+          "tipo": "contractual",
+          "status": "vencido",
+          "dias_restantes": -176,
+          "urgencia": "critical",
+          "notas": "Disputa activa. Andy calcula adeudo por 'peso de etapas' (~$14,000) vs forma de pago del contrato ($80,000). Estrategia: cobrar los $80,000 adeudados con fundamento legal, no incumplimiento total ($200,000)."
+        },
+        {
+          "id": "PLZ-002",
+          "descripcion": "Entrega borrador contrato ligero",
+          "fecha": "2025-11-15",
+          "tipo": "contractual",
+          "status": "vencido",
+          "dias_restantes": -166,
+          "urgencia": "high",
+          "notas": "Prioridad alta. Cliente necesita contrato más amigable para cerrar ventas."
+        },
+        {
+          "id": "PLZ-003",
+          "descripcion": "Entrega paquete legal completo",
+          "fecha": "2025-12-15",
+          "tipo": "contractual",
+          "status": "vencido",
+          "dias_restantes": -136,
+          "urgencia": "high",
+          "notas": "Incluye: contrato ligero + Términos y Condiciones + 3 actas de entrega + protocolo cobranza + contrato subcontratistas + acta cierre."
+        }
+      ],
+      "finanzas": {
+        "total_proyecto": 353080,
+        "anticipo_recibido": 122871,
+        "adeudo": 230209,
+        "honorarios_will": 0,
+        "pagos_recibidos": 0,
+        "total_pendiente": 0,
+        "moneda": "MXN"
+      },
+      "disputa_activa": {
+        "cliente": "Andy",
+        "monto_total": 353080,
+        "anticipo_recibido": 122871,
+        "superficie_m2": 470,
+        "duracion_original_semanas": 22,
+        "disputa": "Cliente calcula adeudo por 'peso de etapas' (~$14,000) vs forma de pago del contrato ($80,000)",
+        "estrategia": "No cobrar incumplimiento total ($200,000). Cobrar los $80,000 adeudados con fundamento legal.",
+        "status": "urgente",
+        "riesgo": "$80,000-$200,000"
+      },
+      "estrategia": {
+        "objetivo": "Formalizar toda la infraestructura legal de Pragma Studio para prevenir futuras disputas y profesionalizar la operación",
+        "proximo_paso": "Generar contrato ligero + Términos y Condiciones + Actas de entrega",
+        "bloqueo_actual": "Disputa con Andy requiere respuesta formal inmediata",
+        "riesgos": [
+          "Cliente Andy podría escalar a litigio",
+          "Futuros clientes sin contrato formal = más disputas",
+          "Subcontratistas sin contrato = riesgo de propiedad intelectual"
+        ]
+      },
+      "historial_sesiones": [
+        {
+          "fecha": "2025-09-29",
+          "tipo": "Design Thinking",
+          "contenido": "Mapeo de proceso, metodología, contratos previos",
+          "documento": "Sesión 1 - Notas Gemini.docx"
+        },
+        {
+          "fecha": "2025-10-03",
+          "tipo": "Design Thinking",
+          "contenido": "Cobranza, etapas, entregables, errores identificados",
+          "documento": "Sesión 2 - Notas Gemini.docx"
+        },
+        {
+          "fecha": "2025-11-03",
+          "tipo": "Urgencia",
+          "contenido": "Disputa pago Andy, estrategia respuesta, $80,000",
+          "documento": "Sesión 3 - Notas Gemini.docx"
+        },
+        {
+          "fecha": "2025-11-18",
+          "tipo": "Revisión",
+          "contenido": "Contrato 24 páginas, T&Cs, actas, agente IA",
+          "documento": "Sesión 4 - Notas Gemini.docx"
+        }
+      ],
+      "carpeta_fisica": "C:\\WillowLegal\\01_Clientes\\Pragma Studio",
+      "agentes_activos": [
+        "Despacho Legal",
+        "Paralegal de Intake",
+        "Arquitecto Legal",
+        "Coordinador de Plazos"
+      ],
+      "notas": "Pragma Studio opera con proceso de 3 etapas: 1) Fase Conceptual — Zonificación preliminar, moodboard, layout. 2) Fase Desarrollo de Diseño — Planos detallados, especificaciones. 3) Fase Documentos Constructivos — Planos técnicos para construcción."
+    },
+    {
+      "matter_id": "WIL-002",
+      "cliente": {
+        "razon_social": "Restaurante El Sabor",
+        "representante": "Andrés García",
+        "email": "andres@elsabor.com",
+        "rfc": "",
+        "domicilio_fiscal": "",
+        "telefono": "",
+        "sector": "",
+        "tamano": "SME"
+      },
+      "asunto": {
+        "area_practica": "Contratos / Corporativo",
+        "tipo": "consultoria",
+        "descripcion": "Matter para Restaurante El Sabor",
+        "status": "active",
+        "prioridad": "medium",
+        "fecha_apertura": "2026-04-30",
+        "deadline_principal": ""
+      },
+      "problemas": [],
+      "documentos": [],
+      "plazos": [],
+      "finanzas": {
+        "total_proyecto": 0,
+        "anticipo_recibido": 0,
+        "adeudo": 0,
+        "honorarios_will": 0,
+        "pagos_recibidos": 0,
+        "total_pendiente": 0,
+        "moneda": "MXN"
+      },
+      "estrategia": {
+        "objetivo": "",
+        "proximo_paso": "Intake inicial",
+        "bloqueo_actual": "none",
+        "riesgos": []
+      },
+      "historial_sesiones": [],
+      "carpeta_fisica": "C:/WillowLegal/01_Clientes/Restaurante El Sabor",
+      "agentes_activos": [
+        "Despacho Legal",
+        "Paralegal de Intake"
+      ]
+    }
+  ],
+  "templates_disponibles": [
+    {
+      "key": "prestacion_servicios",
+      "label": "Contrato de Prestación de Servicios",
+      "area": "Contratos",
+      "materia": "corporativo"
+    },
+    {
+      "key": "terminos_condiciones",
+      "label": "Términos y Condiciones",
+      "area": "Contratos",
+      "materia": "corporativo"
+    },
+    {
+      "key": "nda",
+      "label": "NDA Confidencialidad",
+      "area": "Contratos",
+      "materia": "corporativo"
+    },
+    {
+      "key": "convenio_pagos",
+      "label": "Convenio de Pagos / Cobranza",
+      "area": "Cobranza",
+      "materia": "civil/mercantil"
+    },
+    {
+      "key": "carta_cobranza",
+      "label": "Carta de Cobranza",
+      "area": "Cobranza",
+      "materia": "civil/mercantil"
+    },
+    {
+      "key": "bitacora_entregas",
+      "label": "Bitácora / Acta de Entregas",
+      "area": "Documentación",
+      "materia": "corporativo"
+    },
+    {
+      "key": "confidencialidad",
+      "label": "Acuerdo de Confidencialidad",
+      "area": "Contratos",
+      "materia": "corporativo"
+    },
+    {
+      "key": "contrato_trabajo",
+      "label": "Contrato de Trabajo",
+      "area": "Laboral",
+      "materia": "laboral"
+    },
+    {
+      "key": "arrendamiento",
+      "label": "Contrato de Arrendamiento",
+      "area": "Contratos",
+      "materia": "civil/mercantil"
+    },
+    {
+      "key": "pagare",
+      "label": "Pagaré",
+      "area": "Cobranza",
+      "materia": "civil/mercantil"
+    },
+    {
+      "key": "poder_notarial",
+      "label": "Poder Notarial",
+      "area": "Corporativo",
+      "materia": "corporativo"
+    },
+    {
+      "key": "acta_asamblea",
+      "label": "Acta de Asamblea",
+      "area": "Corporativo",
+      "materia": "corporativo"
+    },
+    {
+      "key": "aviso_privacidad",
+      "label": "Aviso de Privacidad",
+      "area": "Privacidad",
+      "materia": "privacidad"
+    },
+    {
+      "key": "convenio_accionistas",
+      "label": "Convenio de Accionistas",
+      "area": "Corporativo",
+      "materia": "corporativo"
+    },
+    {
+      "key": "estatutos_sociales",
+      "label": "Estatutos Sociales",
+      "area": "Corporativo",
+      "materia": "corporativo"
+    },
+    {
+      "key": "finiquito",
+      "label": "Finiquito",
+      "area": "Laboral",
+      "materia": "laboral"
+    },
+    {
+      "key": "garantias",
+      "label": "Contrato de Garantías",
+      "area": "Cobranza",
+      "materia": "civil/mercantil"
+    },
+    {
+      "key": "calendario_cobranza",
+      "label": "Calendario de Cobranza",
+      "area": "Cobranza",
+      "materia": "civil/mercantil"
+    },
+    {
+      "key": "carta_sat",
+      "label": "Carta al SAT",
+      "area": "Fiscal",
+      "materia": "fiscal"
+    },
+    {
+      "key": "expediente_materialidad",
+      "label": "Expediente de Materialidad",
+      "area": "Fiscal",
+      "materia": "fiscal"
+    },
+    {
+      "key": "formato_arco",
+      "label": "Formato ARCO",
+      "area": "Privacidad",
+      "materia": "privacidad"
+    },
+    {
+      "key": "reglamento_interior",
+      "label": "Reglamento Interior",
+      "area": "Laboral",
+      "materia": "laboral"
+    },
+    {
+      "key": "nda_laboral",
+      "label": "NDA Laboral",
+      "area": "Laboral",
+      "materia": "laboral"
+    }
+  ],
+  "agentes_hermes": {
+    "despacho_legal": {
+      "rol": "Orquestador principal",
+      "status": "activo",
+      "ultima_accion": "Estrategia PRAG-001",
+      "capacidades": ["priorizar", "aprobar", "bloquear", "delegar"]
+    },
+    "paralegal_intake": {
+      "rol": "Recepción y estructura",
+      "status": "activo",
+      "ultima_accion": "Intake Pragma Studio",
+      "capacidades": ["detectar_faltantes", "estructurar", "validar"]
+    },
+    "bibliotecario_legal": {
+      "rol": "Templates y precedentes",
+      "status": "activo",
+      "ultima_accion": "Catálogo templates",
+      "capacidades": ["proponer_template", "mejorar_clausula", "buscar_precedente"]
+    },
+    "arquitecto_legal": {
+      "rol": "Paquetes de documentos",
+      "status": "activo",
+      "ultima_accion": "Diseño paquete PRAG-001",
+      "capacidades": ["disenar_paquete", "mapear_dependencias", "definir_variables"]
+    },
+    "coordinador_plazos": {
+      "rol": "Deadlines y alertas",
+      "status": "activo",
+      "ultima_accion": "3 plazos registrados",
+      "capacidades": ["registrar_deadline", "alertar", "gestionar_bloqueos"]
+    }
+  },
+  "config": {
+    "version": "1.1.0",
+    "ultima_actualizacion": "2026-04-30",
+    "moneda_default": "MXN",
+    "zona_horaria": "America/Mexico_City",
+    "firma": "We Law S.C. / Willow Legal",
+    "hermes_es_control_plane": true
+  }
+}

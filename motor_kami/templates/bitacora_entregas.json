@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "key": "bitacora_entregas",
+    "label": "Bitácora de entregas",
+    "area": "Documentación",
+    "materia": "corporativo",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "data_grid",
+    "signature_block",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "bitacora_entregas",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Proyecto y Partes",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Registro de Entregables",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para Bitácora de entregas. Personalizar según caso específico."
+}

@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Willow Legal — We Law S.C.</title>
+    <style>
+        /* ── Design System Willow Legal ── */
+        :root {
+            --primary: #1a1a18;
+            --bg: #faf8f0;
+            --secondary: #3d3d3a;
+            --meta: #9a9a96;
+            --accent: #8B0000;
+            --gold: #d4a574;
+            --success: #2d5a3d;
+            --warning: #c4851a;
+            --danger: #8B0000;
+            --white: #ffffff;
+            --border: #e0ddd5;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--primary);
+            line-height: 1.6;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--gold);
+        }
+        .header h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .header .subtitle {
+            font-size: 0.75rem;
+            color: var(--meta);
+            margin-top: 2px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-finanzas {
+            background: var(--gold);
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .btn-finanzas:hover { opacity: 0.9; }
+
+        /* ── Navigation ── */
+        .nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            padding: 0 24px;
+        }
+        .nav-tab {
+            padding: 14px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--secondary);
+            transition: all 0.2s;
+        }
+        .nav-tab:hover { color: var(--primary); }
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--gold);
+        }
+
+        /* ── Main Content ── */
+        .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+        /* ── Dashboard ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid var(--gold);
+        }
+        .kpi-card.urgente { border-left-color: var(--danger); }
+        .kpi-card.alerta { border-left-color: var(--warning); }
+        .kpi-card.ok { border-left-color: var(--success); }
+        .kpi-label {
+            font-size: 0.75rem;
+            color: var(--meta);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .kpi-sub {
+            font-size: 0.8rem;
+            color: var(--meta);
+            margin-top: 4px;
+        }
+
+        /* ── Matters Table ── */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        .table-container {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            background: var(--primary);
+            color: var(--white);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        tr:hover { background: #f5f3ed; }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .badge-high { background: #fde8e8; color: var(--danger); }
+        .badge-medium { background: #fef3e2; color: var(--warning); }
+        .badge-low { background: #e8f5e9; color: var(--success); }
+        .badge-critical { background: var(--danger); color: var(--white); }
+        .badge-active { background: #e8f5e9; color: var(--success); }
+        .badge-pending { background: #fef3e2; color: var(--warning); }
+        .badge-done { background: #e0e0e0; color: var(--secondary); }
+        .badge-urgente { background: var(--danger); color: var(--white); }
+        .badge-vencido { background: #555; color: var(--white); }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-sm {
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-sm:hover { background: var(--bg); }
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+        }
+        .btn-primary:hover { background: var(--secondary); }
+
+        /* ── Detail Panel ── */
+        .detail-panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+        .detail-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.4rem;
+        }
+        .detail-meta {
+            color: var(--meta);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: none;
+        }
+        .btn-generar { background: var(--primary); color: var(--white); }
+        .btn-carpeta { background: var(--gold); color: var(--primary); }
+        .btn-editar { background: var(--white); color: var(--primary); border: 1px solid var(--border); }
+
+        /* ── Documentos Tracker ── */
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .doc-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid var(--border);
+        }
+        .doc-card.pendiente { border-left-color: var(--warning); }
+        .doc-card.listo { border-left-color: var(--success); }
+        .doc-card.urgente { border-left-color: var(--danger); }
+        .doc-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .doc-meta {
+            font-size: 0.8rem;
+            color: var(--meta);
+            margin-bottom: 12px;
+        }
+        .doc-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── Plazos Timeline ── */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin-top: 20px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 2px solid var(--white);
+        }
+        .timeline-item.critical::before { background: var(--danger); }
+        .timeline-item.high::before { background: var(--warning); }
+        .timeline-item.medium::before { background: var(--gold); }
+        .timeline-item.low::before { background: var(--success); }
+        .timeline-item.done::before { background: var(--success); }
+        .timeline-item.vencido::before { background: #555; }
+        .timeline-date {
+            font-size: 0.8rem;
+            color: var(--meta);
+            margin-bottom: 2px;
+        }
+        .timeline-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .timeline-desc {
+            font-size: 0.85rem;
+            color: var(--secondary);
+            margin-top: 4px;
+        }
+
+        /* ── Forms ── */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--secondary);
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: var(--white);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        /* ── Alerts ── */
+        .alert-banner {
+            background: var(--danger);
+            color: var(--white);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+        .alert-banner.warning { background: var(--warning); }
+        .alert-banner.info { background: var(--secondary); }
+
+        /* ── Templates Grid ── */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .template-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .template-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .template-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .template-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+        .template-area {
+            font-size: 0.8rem;
+            color: var(--meta);
+        }
+
+        /* ── Hidden sections ── */
+        .hidden { display: none !important; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+            .nav { overflow-x: auto; }
+        }
+        @media (max-width: 480px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Alert Banner (dinámico) -->
+    <div id="alertBanner" class="alert-banner hidden">
+        <span id="alertIcon">⚠️</span>
+        <span id="alertText"></span>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div>
+            <h1>⚖️ Willow Legal</h1>
+            <div class="subtitle">We Law S.C. — Sistema de Gestión Legal</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-finanzas" onclick="switchTab('finanzas')">💰 Finanzas</button>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-tab active" onclick="switchTab('dashboard')" data-tab="dashboard">Dashboard</div>
+        <div class="nav-tab" onclick="switchTab('matters')" data-tab="matters">Matters</div>
+        <div class="nav-tab" onclick="switchTab('documentos')" data-tab="documentos">Documentos</div>
+        <div class="nav-tab" onclick="switchTab('plazos')" data-tab="plazos">Plazos</div>
+        <div class="nav-tab" onclick="switchTab('generar')" data-tab="generar">Generar</div>
+        <div class="nav-tab" onclick="switchTab('templates')" data-tab="templates">Templates</div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="dashboard-grid" id="kpiGrid">
+                <!-- KPIs se cargan dinámicamente -->
+            </div>
+            <div class="section-header">
+                <h2 class="section-title">Matters Activos</h2>
+            </div>
+            <div class="table-container">
+                <table id="mattersTable">
+                    <thead>
+                        <tr>
+                            <th>Matter</th>
+                            <th>Cliente</th>
+                            <th>Área</th>
+                            <th>Status</th>
+                            <th>Prioridad</th>
+                            <th>Docs Pendientes</th>
+                            <th>Próximo Plazo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mattersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MATTERS TAB -->
+        <div id="tab-matters" class="tab-content hidden">
+            <div class="section-header">
+                <h2 class="section-title">Todos los Matters</h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Matter ID</th>
+                            <th>Cliente</th>
+                            <th>Representante</th>
+                            <th>Área</th>
+                            <th>Status</th>
+                            <th>Prioridad</th>
+                            <th>Deadline</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allMattersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DETALLE MATTER (panel deslizable) -->
+        <div id="detailPanel" class="detail-panel hidden">
+            <div class="detail-header">
+                <div>
+                    <div class="detail-title" id="detailTitle"></div>
+                    <div class="detail-meta" id="detailMeta"></div>
+                </div>
+                <div class="detail-actions">
+                    <button class="btn btn-generar" onclick="generarDocumento()">📄 Generar Doc</button>
+                    <button class="btn btn-carpeta" onclick="abrirCarpeta()">📁 Abrir Carpeta</button>
+                    <button class="btn btn-editar" onclick="toggleEditMode()">✏️ Editar</button>
+                </div>
+            </div>
+
+            <!-- Vista normal -->
+            <div id="detailView">
+                <div class="form-row">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 12px;">📋 Información del Cliente</h3>
+                        <div id="clienteInfo"></div>
+                    </div>
+                    <div>
+                        <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 12px;">📊 Finanzas</h3>
+                        <div id="finanzasInfo"></div>
+                    </div>
+                </div>
+
+                <h3 style="font-family: 'Playfair Display', serif; margin: 20px 0 12px;">📑 Documentos</h3>
+                <div class="docs-grid" id="docsGrid"></div>
+
+                <h3 style="font-family: 'Playfair Display', serif; margin: 20px 0 12px;">⏰ Plazos y Deadlines</h3>
+                <div class="timeline" id="timelinePlazos"></div>
+
+                <h3 style="font-family: 'Playfair Display', serif; margin: 20px 0 12px;">⚠️ Problemas Identificados</h3>
+                <div id="problemasList"></div>
+            </div>
+
+            <!-- Modo edición -->
+            <div id="editView" class="hidden">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 16px;">✏️ Editar Matter</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Razón Social</label>
+                        <input class="form-input" id="editRazonSocial" type="text">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Representante</label>
+                        <input class="form-input" id="editRepresentante" type="text">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input class="form-input" id="editEmail" type="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RFC</label>
+                        <input class="form-input" id="editRFC" type="text">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción del Asunto</label>
+                    <textarea class="form-input" id="editDescripcion" rows="3"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                    <button class="btn btn-generar" onclick="guardarCambios()">💾 Guardar Cambios</button>
+                    <button class="btn btn-editar" onclick="toggleEditMode()">❌ Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTOS TAB -->
+        <div id="tab-documentos" class="tab-content hidden">
+            <div class="section-header">
+                <h2 class="section-title">Documentos por Matter</h2>
+            </div>
+            <div id="documentosPorMatter"></div>
+        </div>
+
+        <!-- PLAZOS TAB -->
+        <div id="tab-plazos" class="tab-content hidden">
+            <div class="section-header">
+                <h2 class="section-title">Plazos y Deadlines</h2>
+            </div>
+            <div id="plazosContent"></div>
+        </div>
+
+        <!-- GENERAR TAB -->
+        <div id="tab-generar" class="tab-content hidden">
+            <div class="section-header">
+                <h2 class="section-title">Generar Documento Legal</h2>
+            </div>
+            <div style="background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 24px; max-width: 600px;">
+                <div class="form-group">
+                    <label class="form-label">Matter</label>
+                    <select class="form-input" id="genMatter">
+                        <option value="">Seleccionar matter...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Template</label>
+                    <select class="form-input" id="genTemplate">
+                        <option value="">Seleccionar template...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nombre del archivo (opcional)</label>
+                    <input class="form-input" id="genFilename" type="text" placeholder="ej. Contrato_PRAG-001_2026.pdf">
+                </div>
+                <button class="btn btn-generar" onclick="generarDocumentoDesdeForm()" style="width: 100%;">
+                    📄 Generar Documento
+                </button>
+                <div id="genResult" style="margin-top: 16px;"></div>
+            </div>
+        </div>
+
+        <!-- TEMPLATES TAB -->
+        <div id="tab-templates" class="tab-content hidden">
+            <div class="section-header">
+                <h2 class="section-title">Catálogo de Templates</h2>
+            </div>
+            <div class="templates-grid" id="templatesGrid"></div>
+        </div>
+
+        <!-- FINANZAS TAB (oculto) -->
+        <div id="tab-finanzas" class="tab-content hidden">
+            <div class="section-header">
+                <h2 class="section-title">💰 Dashboard Financiero</h2>
+            </div>
+            <div class="dashboard-grid" id="finanzasKPI"></div>
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Matter</th>
+                            <th>Cliente</th>
+                            <th>Honorarios</th>
+                            <th>Pagado</th>
+                            <th>Pendiente</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finanzasBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ── Estado global ──
+        let currentTab = 'dashboard';
+        let currentMatter = null;
+        let mattersData = [];
+        let templatesData = [];
+        let editMode = false;
+
+        const API_BASE = '';
+
+        // ── Inicialización ──
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            loadMatters();
+            loadTemplates();
+            loadAlertas();
+        });
+
+        // ── Navegación ──
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById(`tab-${tab}`)?.classList.remove('hidden');
+
+            if (tab === 'dashboard') loadDashboard();
+            if (tab === 'matters') loadAllMatters();
+            if (tab === 'documentos') loadDocumentos();
+            if (tab === 'plazos') loadPlazos();
+            if (tab === 'generar') loadGenerarOptions();
+            if (tab === 'templates') loadTemplatesCatalog();
+            if (tab === 'finanzas') loadFinanzas();
+        }
+
+        // ── Dashboard ──
+        async function loadDashboard() {
+            try {
+                const [mattersRes, alertasRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/matters`),
+                    fetch(`${API_BASE}/api/alertas`)
+                ]);
+                const matters = await mattersRes.json();
+                const alertas = await alertasRes.json();
+
+                mattersData = matters.matters || [];
+
+                // KPIs
+                const urgentes = alertas.alertas?.filter(a => a.urgencia === 'critical').length || 0;
+                const proximas = alertas.alertas?.filter(a => a.dias_restantes <= 7 && a.dias_restantes > 0).length || 0;
+                const docsPendientes = mattersData.reduce((sum, m) => sum + (m.documentos_pendientes || 0), 0);
+                const mattersActivos = mattersData.filter(m => m.status === 'active').length;
+
+                document.getElementById('kpiGrid').innerHTML = `
+                    <div class="kpi-card ${urgentes > 0 ? 'urgente' : 'ok'}">
+                        <div class="kpi-label">Alertas Críticas</div>
+                        <div class="kpi-value">${urgentes}</div>
+                        <div class="kpi-sub">Requieren acción inmediata</div>
+                    </div>
+                    <div class="kpi-card ${proximas > 0 ? 'alerta' : 'ok'}">
+                        <div class="kpi-label">Plazos Próximos</div>
+                        <div class="kpi-value">${proximas}</div>
+                        <div class="kpi-sub">Vencen en 7 días</div>
+                    </div>
+                    <div class="kpi-card ${docsPendientes > 0 ? 'alerta' : 'ok'}">
+                        <div class="kpi-label">Docs Pendientes</div>
+                        <div class="kpi-value">${docsPendientes}</div>
+                        <div class="kpi-sub">Documentos por generar</div>
+                    </div>
+                    <div class="kpi-card ok">
+                        <div class="kpi-label">Matters Activos</div>
+                        <div class="kpi-value">${mattersActivos}</div>
+                        <div class="kpi-sub">Total en sistema</div>
+                    </div>
+                `;
+
+                // Tabla matters
+                renderMattersTable(mattersData, 'mattersTableBody', true);
+            } catch (e) {
+                console.error('Error cargando dashboard:', e);
+            }
+        }
+
+        // ── Matters ──
+        async function loadMatters() {
+            try {
+                const res = await fetch(`${API_BASE}/api/matters`);
+                const data = await res.json();
+                mattersData = data.matters || [];
+            } catch (e) {
+                console.error('Error cargando matters:', e);
+            }
+        }
+
+        async function loadAllMatters() {
+            await loadMatters();
+            renderMattersTable(mattersData, 'allMattersBody', false);
+        }
+
+        function renderMattersTable(matters, tbodyId, compact) {
+            const tbody = document.getElementById(tbodyId);
+            if (!matters.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#9a9a96;">No hay matters</td></tr>';
+                return;
+            }
+            tbody.innerHTML = matters.map(m => {
+                const diasText = m.dias_restantes !== null
+                    ? (m.dias_restantes < 0 ? `${m.dias_restantes} días (vencido)` : `${m.dias_restantes} días`)
+                    : 'N/A';
+                const diasClass = m.dias_restantes !== null && m.dias_restantes <= 3 ? 'badge-critical' : 'badge-medium';
+
+                return `
+                    <tr>
+                        <td><strong>${m.matter_id}</strong></td>
+                        <td>${m.cliente}</td>
+                        ${!compact ? `<td>${m.representante}</td>` : ''}
+                        <td>${m.area}</td>
+                        <td><span class="badge badge-${m.status}">${m.status}</span></td>
+                        <td><span class="badge badge-${m.prioridad}">${m.prioridad}</span></td>
+                        ${!compact ? `<td>${m.deadline_principal || 'N/A'}</td>` : ''}
+                        ${compact ? `<td><span class="badge ${diasClass}">${diasText}</span></td>` : ''}
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-sm btn-primary" onclick="verMatter('${m.matter_id}')">👁️ Ver</button>
+                                <button class="btn-sm" onclick="abrirCarpetaMatter('${m.matter_id}')">📁</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ── Detalle Matter ──
+        async function verMatter(matterId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/matter/${matterId}`);
+                const matter = await res.json();
+                currentMatter = matter;
+
+                document.getElementById('detailTitle').textContent = `${matter.matter_id} — ${matter.cliente.razon_social}`;
+                document.getElementById('detailMeta').innerHTML = `
+                    ${matter.asunto.area_practica} • ${matter.asunto.descripcion} •
+                    <span class="badge badge-${matter.asunto.prioridad}">${matter.asunto.prioridad}</span>
+                `;
+
+                // Cliente info
+                document.getElementById('clienteInfo').innerHTML = `
+                    <p><strong>Representante:</strong> ${matter.cliente.representante}</p>
+                    <p><strong>Email:</strong> ${matter.cliente.email}</p>
+                    <p><strong>RFC:</strong> ${matter.cliente.rfc || 'N/A'}</p>
+                    <p><strong>Sector:</strong> ${matter.cliente.sector}</p>
+                    <p><strong>Tamaño:</strong> ${matter.cliente.tamano}</p>
+                `;
+
+                // Finanzas
+                const f = matter.finanzas || {};
+                document.getElementById('finanzasInfo').innerHTML = `
+                    <p><strong>Total Proyecto:</strong> $${f.total_proyecto?.toLocaleString() || 'N/A'} ${f.moneda}</p>
+                    <p><strong>Anticipo Recibido:</strong> $${f.anticipo_recibido?.toLocaleString() || 'N/A'}</p>
+                    <p><strong>Adeudo:</strong> $${f.adeudo?.toLocaleString() || 'N/A'}</p>
+                    <p><strong>Honorarios Will:</strong> $${f.honorarios_will?.toLocaleString() || 'Por definir'}</p>
+                `;
+
+                // Documentos
+                const docs = matter.documentos || [];
+                document.getElementById('docsGrid').innerHTML = docs.map(d => `
+                    <div class="doc-card ${d.status}">
+                        <div class="doc-title">${d.nombre}</div>
+                        <div class="doc-meta">
+                            Template: ${d.template} • Límite: ${d.fecha_limite || 'N/A'}
+                        </div>
+                        <div class="doc-actions">
+                            <span class="badge badge-${d.status}">${d.status}</span>
+                            <span class="badge badge-${d.prioridad}">${d.prioridad}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Plazos
+                const plazos = matter.plazos || [];
+                document.getElementById('timelinePlazos').innerHTML = plazos.map(p => {
+                    const urgencia = p.urgencia || 'medium';
+                    const status = p.status || 'pendiente';
+                    const dias = p.dias_restantes;
+                    const diasText = dias !== null
+                        ? (dias < 0 ? `${dias} días (vencido)` : `${dias} días`)
+                        : 'N/A';
+                    return `
+                        <div class="timeline-item ${urgencia} ${status}">
+                            <div class="timeline-date">${p.fecha} • ${diasText}</div>
+                            <div class="timeline-title">${p.descripcion}</div>
+                            <div class="timeline-desc">${p.notas || ''}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Problemas
+                const problemas = matter.problemas || [];
+                document.getElementById('problemasList').innerHTML = problemas.map(p => `
+                    <div style="padding: 12px; border-left: 3px solid ${p.prioridad === 'critical' ? 'var(--danger)' : p.prioridad === 'high' ? 'var(--warning)' : 'var(--gold)'}; margin-bottom: 8px; background: var(--white);">
+                        <strong>#${p.id} — ${p.descripcion}</strong><br>
+                        <span style="color: var(--meta); font-size: 0.85rem;">${p.impacto}</span><br>
+                        <span style="font-size: 0.85rem;">Documento: ${p.documento_requerido}</span>
+                    </div>
+                `).join('');
+
+                // Mostrar panel
+                document.getElementById('detailPanel').classList.remove('hidden');
+                document.getElementById('detailView').classList.remove('hidden');
+                document.getElementById('editView').classList.add('hidden');
+                editMode = false;
+
+                // Scroll al panel
+                document.getElementById('detailPanel').scrollIntoView({ behavior: 'smooth' });
+            } catch (e) {
+                console.error('Error cargando matter:', e);
+                alert('Error cargando matter');
+            }
+        }
+
+        // ── Edición ──
+        function toggleEditMode() {
+            if (!currentMatter) return;
+            editMode = !editMode;
+            if (editMode) {
+                document.getElementById('editRazonSocial').value = currentMatter.cliente.razon_social;
+                document.getElementById('editRepresentante').value = currentMatter.cliente.representante;
+                document.getElementById('editEmail').value = currentMatter.cliente.email;
+                document.getElementById('editRFC').value = currentMatter.cliente.rfc || '';
+                document.getElementById('editDescripcion').value = currentMatter.asunto.descripcion;
+                document.getElementById('detailView').classList.add('hidden');
+                document.getElementById('editView').classList.remove('hidden');
+            } else {
+                document.getElementById('detailView').classList.remove('hidden');
+                document.getElementById('editView').classList.add('hidden');
+            }
+        }
+
+        async function guardarCambios() {
+            if (!currentMatter) return;
+            const updates = [
+                { campo: 'cliente.razon_social', valor: document.getElementById('editRazonSocial').value },
+                { campo: 'cliente.representante', valor: document.getElementById('editRepresentante').value },
+                { campo: 'cliente.email', valor: document.getElementById('editEmail').value },
+                { campo: 'cliente.rfc', valor: document.getElementById('editRFC').value },
+                { campo: 'asunto.descripcion', valor: document.getElementById('editDescripcion').value }
+            ];
+
+            for (const u of updates) {
+                await fetch(`${API_BASE}/api/matter/${currentMatter.matter_id}/actualizar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(u)
+                });
+            }
+
+            toggleEditMode();
+            verMatter(currentMatter.matter_id);
+            alert('✅ Cambios guardados');
+        }
+
+        // ── Documentos ──
+        async function loadDocumentos() {
+            try {
+                const res = await fetch(`${API_BASE}/api/matters`);
+                const data = await res.json();
+                const matters = data.matters || [];
+
+                let html = '';
+                for (const m of matters) {
+                    const matterRes = await fetch(`${API_BASE}/api/matter/${m.matter_id}`);
+                    const matter = await matterRes.json();
+                    const docs = matter.documentos || [];
+                    if (!docs.length) continue;
+
+                    html += `
+                        <div style="margin-bottom: 24px;">
+                            <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 12px;">
+                                ${m.matter_id} — ${m.cliente}
+                            </h3>
+                            <div class="docs-grid">
+                                ${docs.map(d => `
+                                    <div class="doc-card ${d.status}">
+                                        <div class="doc-title">${d.nombre}</div>
+                                        <div class="doc-meta">Template: ${d.template}</div>
+                                        <div class="doc-actions">
+                                            <span class="badge badge-${d.status}">${d.status}</span>
+                                            <span class="badge badge-${d.prioridad}">${d.prioridad}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                document.getElementById('documentosPorMatter').innerHTML = html || '<p style="color: #9a9a96;">No hay documentos</p>';
+            } catch (e) {
+                console.error('Error cargando documentos:', e);
+            }
+        }
+
+        // ── Plazos ──
+        async function loadPlazos() {
+            try {
+                const res = await fetch(`${API_BASE}/api/alertas`);
+                const data = await res.json();
+                const alertas = data.alertas || [];
+
+                document.getElementById('plazosContent').innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Matter</th>
+                                    <th>Descripción</th>
+                                    <th>Fecha</th>
+                                    <th>Días Restantes</th>
+                                    <th>Urgencia</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${alertas.map(a => `
+                                    <tr>
+                                        <td>${a.cliente}</td>
+                                        <td>${a.descripcion}</td>
+                                        <td>${a.fecha || a.fecha_limite || 'N/A'}</td>
+                                        <td><span class="badge ${a.dias_restantes < 0 ? 'badge-vencido' : a.dias_restantes <= 3 ? 'badge-critical' : 'badge-medium'}">${a.dias_restantes} días</span></td>
+                                        <td><span class="badge badge-${a.urgencia}">${a.urgencia}</span></td>
+                                        <td><span class="badge badge-${a.status}">${a.status}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Error cargando plazos:', e);
+            }
+        }
+
+        // ── Generar ──
+        async function loadGenerarOptions() {
+            try {
+                const [mattersRes, templatesRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/matters`),
+                    fetch(`${API_BASE}/api/templates`)
+                ]);
+                const matters = await mattersRes.json();
+                const templates = await templatesRes.json();
+
+                const matterSelect = document.getElementById('genMatter');
+                matterSelect.innerHTML = '<option value="">Seleccionar matter...</option>' +
+                    (matters.matters || []).map(m => `<option value="${m.matter_id}">${m.matter_id} — ${m.cliente}</option>`).join('');
+
+                const templateSelect = document.getElementById('genTemplate');
+                templateSelect.innerHTML = '<option value="">Seleccionar template...</option>' +
+                    (templates.templates || []).map(t => `<option value="${t.key}">${t.label} (${t.area})</option>`).join('');
+            } catch (e) {
+                console.error('Error cargando opciones:', e);
+            }
+        }
+
+        async function generarDocumentoDesdeForm() {
+            const matterId = document.getElementById('genMatter').value;
+            const template = document.getElementById('genTemplate').value;
+            const filename = document.getElementById('genFilename').value;
+
+            if (!matterId || !template) {
+                alert('Selecciona matter y template');
+                return;
+            }
+
+            const resultDiv = document.getElementById('genResult');
+            resultDiv.innerHTML = '<p>⏳ Generando documento...</p>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/matter/${matterId}/generar-documento`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ template_key: template, output_filename: filename || undefined })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div style="background: #e8f5e9; padding: 16px; border-radius: 8px;">
+                            <p>✅ <strong>Documento generado</strong></p>
+                            <p>Archivo: ${data.file_path}</p>
+                            <p>Tamaño: ${data.file_size_kb} KB</p>
+                            <button class="btn btn-primary" onclick="window.open('file://${data.file_path}', '_blank')">📄 Abrir PDF</button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: var(--danger);">❌ Error: ${data.detail || 'Desconocido'}</p>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<p style="color: var(--danger);">❌ Error: ${e.message}</p>`;
+            }
+        }
+
+        // ── Templates ──
+        async function loadTemplates() {
+            try {
+                const res = await fetch(`${API_BASE}/api/templates`);
+                const data = await res.json();
+                templatesData = data.templates || [];
+            } catch (e) {
+                console.error('Error cargando templates:', e);
+            }
+        }
+
+        function loadTemplatesCatalog() {
+            const grid = document.getElementById('templatesGrid');
+            grid.innerHTML = templatesData.map(t => `
+                <div class="template-card" onclick="seleccionarTemplate('${t.key}')">
+                    <div class="template-icon">📄</div>
+                    <div class="template-title">${t.label}</div>
+                    <div class="template-area">${t.area} • ${t.materia}</div>
+                </div>
+            `).join('');
+        }
+
+        function seleccionarTemplate(key) {
+            switchTab('generar');
+            document.getElementById('genTemplate').value = key;
+        }
+
+        // ── Finanzas ──
+        async function loadFinanzas() {
+            try {
+                const res = await fetch(`${API_BASE}/api/finanzas`);
+                const data = await res.json();
+
+                const resumen = data.resumen || {};
+                document.getElementById('finanzasKPI').innerHTML = `
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Honorarios</div>
+                        <div class="kpi-value">$${resumen.total_honorarios?.toLocaleString() || '0'}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Pagado</div>
+                        <div class="kpi-value">$${resumen.total_pagado?.toLocaleString() || '0'}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Pendiente</div>
+                        <div class="kpi-value">$${resumen.total_pendiente?.toLocaleString() || '0'}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Margen</div>
+                        <div class="kpi-value">${resumen.margen || 0}%</div>
+                    </div>
+                `;
+
+                document.getElementById('finanzasBody').innerHTML = (data.matters || []).map(m => `
+                    <tr>
+                        <td>${m.matter_id}</td>
+                        <td>${m.cliente}</td>
+                        <td>$${m.honorarios?.toLocaleString() || '0'}</td>
+                        <td>$${m.pagado?.toLocaleString() || '0'}</td>
+                        <td>$${m.pendiente?.toLocaleString() || '0'}</td>
+                        <td><span class="badge badge-${m.pendiente > 0 ? 'pending' : 'done'}">${m.pendiente > 0 ? 'Pendiente' : 'Pagado'}</span></td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error cargando finanzas:', e);
+            }
+        }
+
+        // ── Alertas ──
+        async function loadAlertas() {
+            try {
+                const res = await fetch(`${API_BASE}/api/alertas`);
+                const data = await res.json();
+                const alertas = data.alertas || [];
+                const criticas = alertas.filter(a => a.urgencia === 'critical');
+
+                if (criticas.length > 0) {
+                    const banner = document.getElementById('alertBanner');
+                    banner.classList.remove('hidden');
+                    document.getElementById('alertText').textContent =
+                        `${criticas.length} alerta(s) crítica(s): ${criticas.map(c => c.descripcion).join('; ')}`;
+                }
+            } catch (e) {
+                console.error('Error cargando alertas:', e);
+            }
+        }
+
+        // ── Acciones directas ──
+        async function abrirCarpeta() {
+            if (!currentMatter) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/matter/${currentMatter.matter_id}/abrir-carpeta`, { method: 'POST' });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('Error abriendo carpeta: ' + (data.error || 'Desconocido'));
+                }
+            } catch (e) {
+                console.error('Error:', e);
+            }
+        }
+
+        async function abrirCarpetaMatter(matterId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/matter/${matterId}/abrir-carpeta`, { method: 'POST' });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('Error: ' + (data.error || 'Desconocido'));
+                }
+            } catch (e) {
+                console.error('Error:', e);
+            }
+        }
+
+        async function generarDocumento() {
+            if (!currentMatter) return;
+            switchTab('generar');
+            document.getElementById('genMatter').value = currentMatter.matter_id;
+        }
+    </script>
+</body>
+</html>

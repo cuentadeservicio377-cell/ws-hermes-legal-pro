@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "key": "arrendamiento",
+    "label": "Arrendamiento",
+    "area": "Contratos",
+    "materia": "civil",
+    "version": "1.0",
+    "created": "2026-04-23"
+  },
+  "recommended_blocks": [
+    "header_brand",
+    "parties_block",
+    "clause_section",
+    "signature_block",
+    "footer_block"
+  ],
+  "document_data_template": {
+    "tipo": "arrendamiento",
+    "prestador": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "cliente": {
+      "nombre": "",
+      "rfc": "",
+      "domicilio": "",
+      "representante": "",
+      "email": ""
+    },
+    "clausulas": [
+      {
+        "titulo": "Objeto",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Obligaciones",
+        "subclausulas": [
+          "..."
+        ]
+      },
+      {
+        "titulo": "Disposiciones Generales",
+        "subclausulas": [
+          "..."
+        ]
+      }
+    ],
+    "signature_block": {
+      "prestador": {},
+      "cliente": {}
+    }
+  },
+  "required_variables": [
+    "nombre",
+    "rfc",
+    "domicilio",
+    "representante",
+    "email",
+    "clausulas"
+  ],
+  "notes": "Plantilla base para Arrendamiento. Personalizar según caso específico."
+}
