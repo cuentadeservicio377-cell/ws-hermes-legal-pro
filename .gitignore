@@ -1,0 +1,18 @@
+# Hermes Legal Pro — .gitignore
+# Datos runtime del dashboard (NO versionar)
+dashboard/datos/
+
+# Archivos de entorno (contienen API keys)
+.env
+
+# Logs
+logs/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
