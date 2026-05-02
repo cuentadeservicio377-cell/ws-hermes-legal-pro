@@ -72,6 +72,14 @@ async function updateDashboard() {
       alertBadge.textContent = urgentAlerts.length
       alertBadge.style.display = urgentAlerts.length > 0 ? 'block' : 'none'
     }
+    
+    // Tareas pendientes (Google Tasks)
+    API.getTasks().then(data => {
+      const tasks = data.tasks || []
+      const pendingTasks = tasks.filter(t => t.status !== 'completed')
+      // Opcional: mostrar en consola o dashboard
+      console.log(`📋 Tareas pendientes: ${pendingTasks.length}`)
+    }).catch(() => {}) // Silenciar si no está configurado
   } catch (e) {
     console.error('Error actualizando dashboard:', e)
   }
