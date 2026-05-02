@@ -118,37 +118,7 @@ const App = {
 
     // Placeholders para vistas (se implementan en fases siguientes)
     async loadDashboard() {
-        const container = document.getElementById('view-dashboard');
-        container.innerHTML = `
-            <div class="header">
-                <h1>Dashboard</h1>
-                <button class="btn btn-primary" onclick="App.navigate('matters')">+ Nuevo Matter</button>
-            </div>
-            <div id="dashboard-content">
-                <div class="spinner"></div>
-                <p class="text-center">Cargando dashboard...</p>
-            </div>
-        `;
-        
-        // Aquí irá el contenido real en FASE 2
-        // Por ahora mostramos que la infraestructura funciona
-        setTimeout(() => {
-            document.getElementById('dashboard-content').innerHTML = `
-                <div class="alert alert-green">
-                    ✅ Infraestructura lista. Esperando FASE 2 para datos reales.
-                </div>
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-value">—</div>
-                        <div class="kpi-label">Matters Activos</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-value">—</div>
-                        <div class="kpi-label">Documentos Pendientes</div>
-                    </div>
-                </div>
-            `;
-        }, 500);
+        await Dashboard.render();
     },
 
     async loadMatters() {
