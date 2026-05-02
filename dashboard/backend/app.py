@@ -485,6 +485,41 @@ def list_alertas(resueltas: bool = False):
         alertas = [a for a in alertas if not a.get("resuelta")]
     return alertas[::-1]
 
+# ── Google Workspace Integration ──────────────────────────
+@app.get("/api/matters/{matter_id}/drive-folder")
+def get_drive_folder(matter_id: str):
+    """Obtener link de carpeta en Drive."""
+    matters = load_json(MATTERS_FILE)
+    matter = next((m for m in matters if m.get("id") == matter_id), None)
+    
+    if not matter or not matter.get("drive_folder_id"):
+        return {"status": "error", "mensaje": "No hay carpeta en Drive"}
+    
+    return {
+        "status": "ok",
+        "folder_id": matter["drive_folder_id"],
+        "link": f"https://drive.google.com/drive/folders/{matter['drive_folder_id']}"
+    }
+
+@app.get("/api/matters/{matter_id}/documents")
+def get_drive_documents(matter_id: str):
+    """Listar documentos en Drive del matter."""
+    try:
+        from scripts.drive_manager import DriveManager
+        dm = DriveManager()
+        
+        matters = load_json(MATTERS_FILE)
+        matter = next((m for m in matters if m.get("id") == matter_id), None)
+        
+        if not matter:
+            raise HTTPException(status_code=404, detail="Matter no encontrado")
+        
+        files = dm.list_client_files(matter["cliente"])
+        return {"status": "ok", "files": files}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ── Helpers ───────────────────────────────────────────────
 def calcular_dias_restantes(fecha_str: str) -> Optional[int]:
     try:
