@@ -504,6 +504,17 @@ def main():
     result = generar_documento(data, output)
     print(f"✅ PDF generado: {result} ({result.stat().st_size / 1024:.0f} KB)")
     
+    # Subir a Drive si está configurado
+    try:
+        client_name = data.get("cliente", "")
+        if client_name:
+            from scripts.drive_manager import DriveManager
+            dm = DriveManager()
+            drive_result = dm.upload_pdf(str(result), client_name)
+            print(f"📤 Drive: {drive_result['mensaje']}")
+    except Exception as e:
+        print(f"⚠️  Drive no configurado: {e}")
+    
     if args.preview_html:
         html_path = output.with_suffix(".html")
         tipo = data.get("tipo", "contrato")

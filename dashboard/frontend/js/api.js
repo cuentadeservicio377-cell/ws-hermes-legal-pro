@@ -57,6 +57,25 @@ class API {
     static documentos() { return this.get('/api/documentos'); }
     static alertas() { return this.get('/api/alertas'); }
     static carpetas(matterId) { return this.get(`/api/carpetas/${matterId}`); }
+    static driveFolder(matterId) { return this.get(`/api/matters/${matterId}/drive-folder`); }
+    static driveDocuments(matterId) { return this.get(`/api/matters/${matterId}/documents`); }
+}
+
+// Google Workspace helpers
+async function getDriveFolder(matterId) {
+    const response = await fetch(`${API_BASE}/api/matters/${matterId}/drive-folder`);
+    return await response.json();
+}
+
+async function openInDrive(matterId) {
+    const result = await getDriveFolder(matterId);
+    if (result.link) {
+        window.open(result.link, '_blank');
+    }
+}
+
+async function openInDocs(docId) {
+    window.open(`https://docs.google.com/document/d/${docId}/edit`, '_blank');
 }
 
 window.API = API;
