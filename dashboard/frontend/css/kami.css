@@ -552,3 +552,87 @@ body {
     height: 18px;
     cursor: pointer;
 }
+
+/* ===== DOCUMENTOS SPECIFIC ===== */
+
+.documento-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+}
+
+.documento-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.documento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.documento-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.documento-title strong {
+    font-size: 15px;
+    color: var(--ink-blue);
+}
+
+.documento-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.documento-body {
+    border-top: 1px solid var(--border-light);
+    padding-top: 12px;
+}
+
+.documento-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Wizard templates */
+.template-option {
+    padding: 16px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.template-option:hover {
+    border-color: var(--corporate-blue);
+    background: #f8fafc;
+}
+
+.template-option.selected {
+    border-color: var(--ink-blue);
+    background: #eff6ff;
+}
+
+/* PDF preview iframe */
+.pdf-preview {
+    width: 100%;
+    height: 80vh;
+    border: none;
+    border-radius: var(--radius);
+}

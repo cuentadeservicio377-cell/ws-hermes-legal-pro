@@ -130,11 +130,7 @@ const App = {
     },
 
     async loadDocumentos() {
-        const container = document.getElementById('view-documentos');
-        container.innerHTML = `
-            <div class="header"><h1>Documentos</h1></div>
-            <div class="alert alert-yellow">🏗️ Vista en construcción. FASE 5.</div>
-        `;
+        await Documentos.render();
     },
 
     async loadCalendario() {
