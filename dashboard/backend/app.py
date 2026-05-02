@@ -44,9 +44,11 @@ REUNIONES_FILE = DATA_DIR / "reuniones.json"
 ALERTAS_FILE = DATA_DIR / "alertas.json"
 DOCUMENTOS_FILE = DATA_DIR / "documentos.json"
 FINANZAS_FILE = DATA_DIR / "finanzas.json"
+PLAZOS_FILE = DATA_DIR / "plazos.json"
+APROBACIONES_FILE = DATA_DIR / "aprobaciones.json"
 
 # Inicializar JSON si no existen
-for f in [MATTERS_FILE, REUNIONES_FILE, ALERTAS_FILE, DOCUMENTOS_FILE, FINANZAS_FILE]:
+for f in [MATTERS_FILE, REUNIONES_FILE, ALERTAS_FILE, DOCUMENTOS_FILE, FINANZAS_FILE, PLAZOS_FILE, APROBACIONES_FILE]:
     if not f.exists():
         with open(f, "w", encoding="utf-8") as fh:
             json.dump([], fh)
@@ -605,6 +607,90 @@ def crear_movimiento(payload: dict):
             "movimiento": movimiento,
             "mensaje": f"💰 {movimiento['tipo'].upper()}: ${movimiento['monto']:,.2f}"
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ── Plazos ────────────────────────────────────────────────
+@app.get("/api/plazos")
+def list_plazos():
+    """Lista todos los plazos activos."""
+    try:
+        plazos = load_json(PLAZOS_FILE)
+        return {"plazos": plazos, "count": len(plazos)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/plazo")
+def create_plazo(payload: dict):
+    """Crea un nuevo plazo/vencimiento."""
+    try:
+        plazos = load_json(PLAZOS_FILE)
+        
+        plazo = {
+            "id": f"PLZ-{len(plazos)+1:03d}",
+            "matter_id": payload.get("matter_id"),
+            "titulo": payload.get("titulo", "Plazo sin título"),
+            "fecha_vencimiento": payload.get("fecha_vencimiento"),
+            "tipo": payload.get("tipo", "general"),
+            "estado": "pendiente",
+            "notas": payload.get("notas", ""),
+            "created_at": datetime.now().isoformat()
+        }
+        plazos.append(plazo)
+        save_json(PLAZOS_FILE, plazos)
+        
+        # Crear evento en Calendar si hay credenciales
+        try:
+            from scripts.calendar_manager import CalendarManager
+            cal = CalendarManager()
+            cal.create_deadline(
+                matter_id=plazo["matter_id"],
+                descripcion=plazo["titulo"],
+                fecha=plazo["fecha_vencimiento"],
+                reminder_days=[3, 1]
+            )
+            plazo["calendar_synced"] = True
+        except Exception as e:
+            plazo["calendar_error"] = str(e)
+        
+        save_json(PLAZOS_FILE, plazos)
+        
+        return {"plazo": plazo, "message": "Plazo creado"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ── Aprobaciones ──────────────────────────────────────────
+@app.get("/api/aprobaciones")
+def list_aprobaciones():
+    """Lista documentos pendientes de aprobación."""
+    try:
+        aprobaciones = load_json(APROBACIONES_FILE)
+        documentos = load_json(DOCUMENTOS_FILE)
+        # Fusionar documentos con estado de aprobación
+        pendientes = [d for d in documentos if d.get("estado") in ["borrador", "generado", "revision"]]
+        return {"aprobaciones": pendientes, "count": len(pendientes)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/aprobacion/{aprobacion_id}/aprobar")
+def aprobar_documento_endpoint(aprobacion_id: str, payload: dict = {}):
+    """Aprueba un documento pendiente."""
+    try:
+        documentos = load_json(DOCUMENTOS_FILE)
+        doc = next((d for d in documentos if d["id"] == aprobacion_id), None)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Documento no encontrado")
+        
+        doc["estado"] = "aprobado"
+        doc["aprobado_por"] = payload.get("aprobado_por", "Sistema")
+        doc["fecha_aprobacion"] = datetime.now().isoformat()
+        doc["comentario_aprobacion"] = payload.get("comentario", "")
+        
+        save_json(DOCUMENTOS_FILE, documentos)
+        
+        return {"aprobacion": doc, "message": "Documento aprobado"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
