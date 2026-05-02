@@ -43,9 +43,10 @@ MATTERS_FILE = DATA_DIR / "matters.json"
 REUNIONES_FILE = DATA_DIR / "reuniones.json"
 ALERTAS_FILE = DATA_DIR / "alertas.json"
 DOCUMENTOS_FILE = DATA_DIR / "documentos.json"
+FINANZAS_FILE = DATA_DIR / "finanzas.json"
 
 # Inicializar JSON si no existen
-for f in [MATTERS_FILE, REUNIONES_FILE, ALERTAS_FILE, DOCUMENTOS_FILE]:
+for f in [MATTERS_FILE, REUNIONES_FILE, ALERTAS_FILE, DOCUMENTOS_FILE, FINANZAS_FILE]:
     if not f.exists():
         with open(f, "w", encoding="utf-8") as fh:
             json.dump([], fh)
@@ -326,6 +327,59 @@ def get_documento(doc_id: str):
             return d
     raise HTTPException(status_code=404, detail="Documento no encontrado")
 
+@app.post("/api/documentos/{doc_id}/aprobar")
+def aprobar_documento(doc_id: str, payload: dict):
+    """Aprobar documento con trazabilidad."""
+    try:
+        documentos = load_json(DOCUMENTOS_FILE)
+        doc = next((d for d in documentos if d["id"] == doc_id), None)
+        
+        if not doc:
+            raise HTTPException(status_code=404, detail="Documento no encontrado")
+        
+        doc["estado"] = "aprobado"
+        doc["aprobado_por"] = payload.get("aprobado_por", "Sistema")
+        doc["fecha_aprobacion"] = datetime.now().isoformat()
+        doc["comentario_aprobacion"] = payload.get("comentario", "")
+        
+        save_json(DOCUMENTOS_FILE, documentos)
+        
+        return {
+            "status": "ok",
+            "documento": doc,
+            "mensaje": f"✅ Documento {doc_id} aprobado por {doc['aprobado_por']}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/documentos/{doc_id}/rechazar")
+def rechazar_documento(doc_id: str, payload: dict):
+    """Rechazar documento."""
+    try:
+        documentos = load_json(DOCUMENTOS_FILE)
+        doc = next((d for d in documentos if d["id"] == doc_id), None)
+        
+        if not doc:
+            raise HTTPException(status_code=404, detail="Documento no encontrado")
+        
+        doc["estado"] = "rechazado"
+        doc["rechazado_por"] = payload.get("rechazado_por", "Sistema")
+        doc["fecha_rechazo"] = datetime.now().isoformat()
+        doc["motivo_rechazo"] = payload.get("motivo", "")
+        
+        save_json(DOCUMENTOS_FILE, documentos)
+        
+        return {
+            "status": "ok",
+            "mensaje": f"❌ Documento {doc_id} rechazado"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ── Motor Kami Integration ──────────────────────────────────
 
 @app.get("/api/templates")
@@ -484,6 +538,75 @@ def list_alertas(resueltas: bool = False):
     if not resueltas:
         alertas = [a for a in alertas if not a.get("resuelta")]
     return alertas[::-1]
+
+# ── Finanzas ───────────────────────────────────────────────
+@app.get("/api/finanzas")
+def listar_finanzas(matter_id: str = None):
+    """Listar movimientos financieros."""
+    try:
+        finanzas = load_json(FINANZAS_FILE)
+        # Adapt to expected format: dict with "movimientos" key or flat list
+        if isinstance(finanzas, dict):
+            movimientos = finanzas.get("movimientos", [])
+        else:
+            movimientos = finanzas
+        
+        if matter_id:
+            movimientos = [m for m in movimientos if m.get("matter_id") == matter_id]
+        
+        return {
+            "status": "ok",
+            "movimientos": movimientos[-50:],
+            "resumen": finanzas.get("resumen", {}) if isinstance(finanzas, dict) else {}
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/finanzas")
+def crear_movimiento(payload: dict):
+    """Registrar movimiento financiero."""
+    try:
+        finanzas = load_json(FINANZAS_FILE)
+        if isinstance(finanzas, dict):
+            movimientos = finanzas.get("movimientos", [])
+        else:
+            movimientos = finanzas
+            finanzas = {"version": "1.0", "movimientos": movimientos, "resumen": {}}
+        
+        movimiento = {
+            "id": f"FIN-{len(movimientos)+1:03d}",
+            "matter_id": payload.get("matter_id"),
+            "concepto": payload.get("concepto", ""),
+            "monto": float(payload.get("monto", 0)),
+            "tipo": payload.get("tipo", "anticipo"),
+            "estado": payload.get("estado", "pendiente"),
+            "fecha": payload.get("fecha", datetime.now().isoformat()),
+            "notas": payload.get("notas", "")
+        }
+        
+        movimientos.append(movimiento)
+        finanzas["movimientos"] = movimientos
+        
+        # Recalcular resumen
+        movs = finanzas["movimientos"]
+        finanzas["resumen"] = {
+            "total_anticipos": sum(m["monto"] for m in movs if m["tipo"] == "anticipo"),
+            "total_honorarios": sum(m["monto"] for m in movs if m["tipo"] == "honorario"),
+            "total_facturado": sum(m["monto"] for m in movs if m["tipo"] == "factura"),
+            "total_cobrado": sum(m["monto"] for m in movs if m["estado"] == "cobrado"),
+            "total_pendiente": sum(m["monto"] for m in movs if m["estado"] == "pendiente"),
+            "count": len(movs)
+        }
+        
+        save_json(FINANZAS_FILE, finanzas)
+        
+        return {
+            "status": "ok",
+            "movimiento": movimiento,
+            "mensaje": f"💰 {movimiento['tipo'].upper()}: ${movimiento['monto']:,.2f}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ── Google Workspace Integration ──────────────────────────
 @app.get("/api/matters/{matter_id}/drive-folder")

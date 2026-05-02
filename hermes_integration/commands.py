@@ -95,15 +95,18 @@ class HermesLegalCommands:
             # Crear estructura de carpetas
             self._crear_carpetas_matter(matter["carpeta"])
             
-            # Crear en Drive
+            # Crear en Drive (usar token existente)
             try:
                 from scripts.drive_manager import DriveManager
                 dm = DriveManager()
                 drive_folder_id = dm.create_client_structure(matter["cliente"])
                 matter["drive_folder_id"] = drive_folder_id
-                print(f"📁 Drive: Carpeta creada")
+                matter["drive_link"] = f"https://drive.google.com/drive/folders/{drive_folder_id}"
+                print(f"📁 Drive: Carpeta creada {drive_folder_id}")
             except Exception as e:
                 print(f"⚠️  Drive no disponible: {e}")
+                matter["drive_folder_id"] = None
+                matter["drive_link"] = None
             
             return {
                 "status": "ok",
@@ -112,7 +115,8 @@ class HermesLegalCommands:
                     f"✅ Matter creado: {matter_id}\n"
                     f"📁 Carpeta: {matter['carpeta']}\n"
                     f"📋 Next step: {matter['next_step']}\n"
-                    f"🏷️  Área: {matter['area']}"
+                    f"🏷️  Área: {matter['area']}\n"
+                    f"📁 Drive: {matter.get('drive_link', 'No disponible')}"
                 )
             }
             
@@ -136,7 +140,8 @@ class HermesLegalCommands:
             lines = ["📋 MATTERS ACTIVOS:"]
             for m in matters[-limite:]:
                 emoji = "🟢" if m.get("estado") == "Activo" else "🟡" if m.get("estado") == "Intake" else "🔴"
-                lines.append(f"  {emoji} {m['id']}: {m['nombre']} ({m['estado']})")
+                drive_icon = "📁" if m.get("drive_folder_id") else "❌"
+                lines.append(f"  {emoji} {m['id']}: {m['nombre']} {drive_icon}")
             
             return {
                 "status": "ok",
@@ -309,6 +314,27 @@ class HermesLegalCommands:
             alertas.append(alerta)
             self._save_json(self.alertas_file, alertas)
             
+            # Crear en Google Calendar
+            mensaje_extra = ""
+            try:
+                from scripts.calendar_manager import CalendarManager
+                cm = CalendarManager()
+                
+                cal_result = cm.create_deadline(
+                    matter_id=matter_id,
+                    descripcion=descripcion,
+                    fecha=fecha,
+                    reminder_days=[3, 1]
+                )
+                
+                alerta["calendar_event_id"] = cal_result['id']
+                alerta["calendar_link"] = cal_result['link']
+                self._save_json(self.alertas_file, alertas)
+                
+                mensaje_extra = f"\n📅 Calendar: {cal_result['link']}"
+            except Exception as e:
+                print(f"⚠️  Calendar: {e}")
+            
             return {
                 "status": "ok",
                 "mensaje": (
@@ -316,6 +342,7 @@ class HermesLegalCommands:
                     f"   Matter: {matter_id}\n"
                     f"   📌 {descripcion}\n"
                     f"   📆 Fecha límite: {fecha}"
+                    f"{mensaje_extra}"
                 )
             }
             

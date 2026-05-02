@@ -43,30 +43,42 @@ class DriveManager:
         self.base_folder_id = self._get_or_create_folder(base_folder_name)
         
     def _get_credentials(self):
-        """Obtener credenciales OAuth2."""
+        """Obtener credenciales OAuth2 usando token existente."""
         token_path = Path("config/token.json")
         creds_path = Path("config/client_secret.json")
         
+        # PRIORIDAD 1: Usar token existente
         if token_path.exists():
-            creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
-        else:
-            creds = None
-            
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                if not creds_path.exists():
-                    raise FileNotFoundError(f"No existe {creds_path}. Descargar de Google Cloud Console.")
-                flow = InstalledAppFlow.from_client_secrets_file(str(creds_path), SCOPES)
-                creds = flow.run_local_server(port=0)
+            try:
+                creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
+                if creds and creds.valid:
+                    print("✅ Token existente válido")
+                    return creds
+                elif creds and creds.expired and creds.refresh_token:
+                    print("🔄 Refrescando token...")
+                    creds.refresh(Request())
+                    # Guardar token refrescado
+                    with open(token_path, 'w') as token:
+                        token.write(creds.to_json())
+                    print("✅ Token refrescado")
+                    return creds
+            except Exception as e:
+                print(f"⚠️  Error con token existente: {e}")
+        
+        # PRIORIDAD 2: Autenticar nuevo (solo si no hay token)
+        if creds_path.exists():
+            print("🔐 Iniciando autenticación nueva...")
+            flow = InstalledAppFlow.from_client_secrets_file(str(creds_path), SCOPES)
+            creds = flow.run_local_server(port=0)
             
             # Guardar token
             token_path.parent.mkdir(parents=True, exist_ok=True)
             with open(token_path, 'w') as token:
                 token.write(creds.to_json())
-        
-        return creds
+            print("✅ Nuevo token guardado")
+            return creds
+        else:
+            raise FileNotFoundError(f"No existe {creds_path}. Descargar de Google Cloud Console.")
     
     def _get_or_create_folder(self, name, parent_id=None):
         """Obtener o crear carpeta en Drive."""
