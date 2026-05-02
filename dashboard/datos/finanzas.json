@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "movimientos": [],
+  "resumen": {
+    "total_anticipos": 0,
+    "total_honorarios": 0,
+    "total_facturado": 0,
+    "total_cobrado": 0,
+    "total_pendiente": 0,
+    "count": 0
+  }
+}
