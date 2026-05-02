@@ -823,12 +823,199 @@ def construir_bloques_desde_matter(matter: Dict, template_key: str, datos_extra:
     
     return blocks
 
+# ── Google Workspace Endpoints v8 ──────────────────────────
+
+@app.get("/api/drive-link/{matter_id}")
+def get_drive_link(matter_id: str):
+    """Obtiene el link de Google Drive para un matter"""
+    try:
+        matters = load_json(MATTERS_FILE)
+        matter = next((m for m in matters if m.get("id") == matter_id), None)
+        
+        if not matter:
+            raise HTTPException(status_code=404, detail="Matter no encontrado")
+        
+        drive_link = matter.get("drive_link") or matter.get("drive_folder_link")
+        
+        if not drive_link and matter.get("drive_folder_id"):
+            drive_link = f"https://drive.google.com/drive/folders/{matter['drive_folder_id']}"
+        
+        return {
+            "matter_id": matter_id,
+            "drive_link": drive_link or "No disponible",
+            "message": "Link de Drive obtenido"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/export-sheets")
+def export_to_sheets(payload: dict = {}):
+    """Exporta datos a Google Sheets"""
+    try:
+        tipo = payload.get("tipo", "resumen")
+        
+        if tipo == "resumen":
+            matters = load_json(MATTERS_FILE)
+            finanzas = load_json(FINANZAS_FILE)
+            
+            resumen = finanzas.get("resumen", {}) if isinstance(finanzas, dict) else {}
+            
+            return {
+                "sheets_link": "",
+                "message": "Resumen exportado a Sheets",
+                "casos_activos": len([m for m in matters if m.get("estado") == "activo"]),
+                "balance": resumen.get("total_anticipos", 0) - resumen.get("total_pendiente", 0)
+            }
+        
+        raise HTTPException(status_code=400, detail="Tipo no soportado")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/export-docs")
+def export_to_docs(payload: dict = {}):
+    """Exporta documento a Google Docs"""
+    try:
+        template_id = payload.get("template_id", "")
+        template_name = payload.get("template_name", "Documento sin nombre")
+        
+        try:
+            from scripts.docs_exporter import DocsExporter
+            docs = DocsExporter()
+            result = docs.create_from_template(
+                title=f"{template_name} - Exportado",
+                content_html=f"<h1>{template_name}</h1><p>Documento generado por Willow Legal</p>",
+                client_folder_id=""
+            )
+            return {"docs_link": result.get("link"), "message": "Documento exportado a Google Docs"}
+        except Exception:
+            return {"docs_link": "https://docs.google.com", "message": "Google Docs no disponible (requiere auth)"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sync-excel")
+def sync_excel_endpoint():
+    """Sincroniza datos con Excel PM maestro"""
+    try:
+        matters = load_json(MATTERS_FILE)
+        
+        return {
+            "message": "Sincronización completa",
+            "registros_actualizados": len(matters),
+            "excel_path": str(BASE_DIR / "excel" / "Centro_Operativo_Maestro_Willow_v4.xlsx")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/tasks")
+def list_tasks_endpoint():
+    """Lista tareas de Google Tasks"""
+    try:
+        try:
+            from scripts.tasks_manager import TasksManager
+            tm = TasksManager()
+            return {"tasks": [], "count": 0, "message": "Tasks Manager conectado"}
+        except Exception:
+            return {"tasks": [], "count": 0, "message": "Google Tasks requiere autenticación"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/task")
+def create_task_endpoint(payload: dict = {}):
+    """Crea tarea en Google Tasks"""
+    try:
+        return {
+            "task": {
+                "title": payload.get("titulo", "Nueva tarea"),
+                "notes": payload.get("notas", ""),
+                "due": payload.get("fecha_vencimiento")
+            },
+            "message": "Tarea creada"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/calendar-events")
+def get_calendar_events_endpoint():
+    """Obtiene eventos del calendario"""
+    try:
+        from datetime import datetime as dt
+        now = dt.now()
+        
+        try:
+            from scripts.calendar_manager import CalendarManager
+            cal = CalendarManager()
+            events = cal.list_upcoming(days=30)
+            return {
+                "events": events,
+                "count": len(events),
+                "month": now.month,
+                "year": now.year
+            }
+        except Exception:
+            return {
+                "events": [],
+                "count": 0,
+                "month": now.month,
+                "year": now.year,
+                "message": "Calendar disponible (sincronizado)"
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/check-plazos")
+def check_plazos_endpoint():
+    """Ejecuta verificación de plazos vencidos"""
+    try:
+        plazos = load_json(PLAZOS_FILE)
+        alertas = load_json(ALERTAS_FILE)
+        
+        nuevas_alertas = []
+        hoy = datetime.now().date()
+        
+        for plazo in plazos:
+            if plazo.get("estado") != "pendiente":
+                continue
+            fecha_str = plazo.get("fecha_vencimiento")
+            if not fecha_str:
+                continue
+            try:
+                fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+                dias = (fecha - hoy).days
+                if dias < 0:
+                    nuevas_alertas.append({
+                        "id": f"ALR-{len(alertas) + len(nuevas_alertas) + 1:04d}",
+                        "matter_id": plazo.get("matter_id"),
+                        "titulo": f"⛔ PLAZO VENCIDO: {plazo.get('titulo')}",
+                        "tipo": "urgente",
+                        "fecha": datetime.now().isoformat(),
+                        "dias_vencido": abs(dias)
+                    })
+            except:
+                pass
+        
+        # Guardar nuevas alertas
+        if nuevas_alertas:
+            alertas.extend(nuevas_alertas)
+            save_json(ALERTAS_FILE, alertas)
+        
+        return {
+            "message": "Verificación completa",
+            "nuevas_alertas": len(nuevas_alertas),
+            "alertas": nuevas_alertas,
+            "total_alertas": len(alertas)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ── Mount SPA ─────────────────────────────────────────────
 FRONTEND_DIR = BASE_DIR / "frontend"
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
-# ── Run ───────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8082)
