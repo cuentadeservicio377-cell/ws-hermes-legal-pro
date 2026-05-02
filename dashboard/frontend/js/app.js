@@ -134,11 +134,7 @@ const App = {
     },
 
     async loadCalendario() {
-        const container = document.getElementById('view-calendario');
-        container.innerHTML = `
-            <div class="header"><h1>Calendario</h1></div>
-            <div class="alert alert-yellow">🏗️ Vista en construcción. FASE 6.</div>
-        `;
+        await Calendario.render();
     },
 
     // Modal
