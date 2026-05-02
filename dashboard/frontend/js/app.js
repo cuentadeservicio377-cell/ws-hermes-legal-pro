@@ -126,11 +126,7 @@ const App = {
     },
 
     async loadReuniones() {
-        const container = document.getElementById('view-reuniones');
-        container.innerHTML = `
-            <div class="header"><h1>Reuniones</h1></div>
-            <div class="alert alert-yellow">🏗️ Vista en construcción. FASE 4.</div>
-        `;
+        await Reuniones.render();
     },
 
     async loadDocumentos() {

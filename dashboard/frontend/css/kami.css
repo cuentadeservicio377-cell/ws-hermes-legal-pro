@@ -431,3 +431,124 @@ body {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
+
+/* ===== REUNIONES SPECIFIC ===== */
+
+.reunion-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+    border-left: 4px solid var(--corporate-blue);
+}
+
+.reunion-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateX(4px);
+}
+
+.reunion-card.procesada {
+    border-left-color: var(--success-green);
+}
+
+.reunion-card.pendiente {
+    border-left-color: var(--warning-yellow);
+}
+
+.reunion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reunion-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.reunion-title strong {
+    font-size: 16px;
+    color: var(--ink-blue);
+}
+
+.reunion-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.reunion-body {
+    border-top: 1px solid var(--border-light);
+    padding-top: 12px;
+}
+
+.reunion-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.reunion-resumen {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.reunion-plazos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Transcript area */
+.transcript-box {
+    background: var(--bg-warm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+/* Documentos sugeridos checklist */
+.doc-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.doc-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-warm);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.doc-checklist-item:hover {
+    background: #f0ede5;
+}
+
+.doc-checklist-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
