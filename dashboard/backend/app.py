@@ -21,7 +21,13 @@ from pydantic import BaseModel
 # ── Paths ─────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "datos"
+
+# Detectar motor_kami (puede estar en repo raíz o en dashboard/)
 MOTOR_DIR = BASE_DIR / "motor_kami"
+if not (MOTOR_DIR / "motor_kami.py").exists():
+    # Si no está en BASE_DIR, probar subiendo un nivel (caso ejecución desde raíz)
+    MOTOR_DIR = BASE_DIR.parent / "motor_kami"
+
 CLIENTES_DIR = Path.home() / "WillowLegal" / "01_Clientes"
 PLANTILLAS_DIR = Path.home() / "WillowLegal" / "02_Administracion" / "Plantillas"
 
@@ -385,16 +391,22 @@ def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
     # Construir bloques para Kami
     blocks = construir_bloques_desde_matter(matter, req.template_key, req.datos_extra)
     
-    # Generar via Motor Kami CLI
+    # Generar via Motor Kami CLI usando archivo temporal
+    import tempfile
     try:
-        json_input = json.dumps({"blocks": blocks, "options": {"titulo": f"Documento {req.template_key}"}})
+        kami_input = {"blocks": blocks, "options": {"titulo": f"Documento {req.template_key}"}}
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+            json.dump(kami_input, tmp, ensure_ascii=False)
+            tmp_path = tmp.name
+        
         result = subprocess.run(
-            [sys.executable, str(MOTOR_DIR / "motor_kami.py"), "--input", "-", "--output", str(output_path)],
-            input=json_input,
+            [sys.executable, str(MOTOR_DIR / "motor_kami.py"), "--input", tmp_path, "--output", str(output_path)],
             capture_output=True,
             text=True,
             timeout=60
         )
+        
+        os.unlink(tmp_path)  # Limpiar archivo temporal
         
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=f"Error Motor Kami: {result.stderr}")
