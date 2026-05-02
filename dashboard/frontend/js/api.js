@@ -59,6 +59,15 @@ class API {
     static carpetas(matterId) { return this.get(`/api/carpetas/${matterId}`); }
     static driveFolder(matterId) { return this.get(`/api/matters/${matterId}/drive-folder`); }
     static driveDocuments(matterId) { return this.get(`/api/matters/${matterId}/documents`); }
+    
+    // v7 Compatibility aliases
+    static getMatters() { return this.get('/api/matters'); }
+    static getPlazos() { return this.get('/api/plazos'); }
+    static getAlertas() { return this.get('/api/alertas'); }
+    static getTemplates() { return this.get('/api/templates'); }
+    static getAprobaciones() { return this.get('/api/aprobaciones'); }
+    static aprobarDocumento(id) { return this.post(`/api/aprobacion/${id}/aprobar`); }
+    static createPlazo(data) { return this.post('/api/plazo', data); }
 }
 
 // Google Workspace helpers

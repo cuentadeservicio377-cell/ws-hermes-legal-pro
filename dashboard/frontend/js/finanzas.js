@@ -48,20 +48,26 @@ const FinanzasUI = {
         
         try {
             const data = await FinanzasAPI.cargarResumen();
+            // Adaptar al formato real del backend: {status, movimientos, resumen}
+            const resumen = data.resumen || {};
+            const ingresos = resumen.total_cobrado || resumen.total_anticipos || 0;
+            const pendientes = resumen.total_pendiente || 0;
+            const balance = ingresos - pendientes;
+            
             container.innerHTML = `
                 <div class="finanzas-cards">
                     <div class="card ingresos">
                         <h4>Ingresos</h4>
-                        <p class="monto">$${data.ingresos?.toLocaleString() || 0}</p>
+                        <p class="monto positivo">$${ingresos.toLocaleString()}</p>
                     </div>
                     <div class="card egresos">
-                        <h4>Egresos</h4>
-                        <p class="monto">$${data.egresos?.toLocaleString() || 0}</p>
+                        <h4>Pendiente</h4>
+                        <p class="monto negativo">$${pendientes.toLocaleString()}</p>
                     </div>
                     <div class="card balance">
                         <h4>Balance</h4>
-                        <p class="monto ${data.balance >= 0 ? 'positivo' : 'negativo'}">
-                            $${data.balance?.toLocaleString() || 0}
+                        <p class="monto ${balance >= 0 ? 'positivo' : 'negativo'}">
+                            $${balance.toLocaleString()}
                         </p>
                     </div>
                 </div>
@@ -77,7 +83,8 @@ const FinanzasUI = {
         
         try {
             const data = await FinanzasAPI.cargarTransacciones(matterId);
-            const transacciones = data.transacciones || [];
+            // Adaptar al formato real del backend: {status, movimientos}
+            const transacciones = data.movimientos || data.transacciones || [];
             
             container.innerHTML = `
                 <table class="finanzas-table">
@@ -97,7 +104,7 @@ const FinanzasUI = {
                                 <td>${t.concepto}</td>
                                 <td>${t.matter_id || '-'}</td>
                                 <td><span class="badge ${t.tipo}">${t.tipo}</span></td>
-                                <td class="monto ${t.tipo}">$${t.monto?.toLocaleString() || 0}</td>
+                                <td class="monto ${t.tipo}">$${(t.monto || 0).toLocaleString()}</td>
                             </tr>
                         `).join('')}
                     </tbody>

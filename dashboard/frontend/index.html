@@ -3,83 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hermes Legal Pro v3.0</title>
-    <link rel="stylesheet" href="css/kami.css">
+    <title>Willow Legal — Sistema de Gestión</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxOCIgZmlsbD0iIzI1NjNlYiIvPjx0ZXh0IHg9IjIwIiB5PSIyNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSJib2xkIj5XPC90ZXh0Pjwvc3ZnPg==">
 </head>
 <body>
-    <div class="app">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="logo">
-                <div class="logo-icon">⚖️</div>
-                <div class="logo-text">
-                    <h1>Hermes Legal</h1>
-                    <span>Pro v3.0</span>
+    <!-- Sidebar: logo + navegación -->
+    <nav class="sidebar">
+        <div class="logo">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="18" fill="#2563eb"/>
+                <text x="20" y="26" text-anchor="middle" fill="white" font-size="20" font-weight="bold">W</text>
+            </svg>
+            <span>Willow Legal</span>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#inicio" class="active">🏠 Inicio</a></li>
+            <li><a href="#matters">📁 Casos (Matters)</a></li>
+            <li><a href="#documentos">📄 Documentos</a></li>
+            <li><a href="#plazos">⏰ Plazos</a></li>
+            <li><a href="#finanzas">💰 Finanzas</a></li>
+            <li><a href="#aprobaciones">✅ Aprobaciones</a></li>
+            <li><a href="#alertas">🔔 Alertas</a></li>
+        </ul>
+        <div class="user-info">
+            <span id="user-name">Abogado</span>
+            <button id="btn-ayuda" class="btn-secundario">❓ Ayuda</button>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="main-content">
+        <!-- Header con título y acciones rápidas -->
+        <header class="main-header">
+            <h1 id="page-title">Panel de Control</h1>
+            <div class="quick-actions">
+                <button id="btn-nuevo-matter" class="btn-primario">+ Nuevo Caso</button>
+                <button id="btn-nuevo-documento" class="btn-primario">+ Nuevo Documento</button>
+                <button id="btn-nuevo-plazo" class="btn-secundario">+ Nuevo Plazo</button>
+            </div>
+        </header>
+
+        <!-- Dashboard resumen -->
+        <section id="inicio" class="dashboard section">
+            <div class="cards-grid">
+                <div class="card card-matters">
+                    <h3>Casos Activos</h3>
+                    <p class="big-number" id="count-matters">0</p>
+                    <a href="#matters">Ver todos →</a>
+                </div>
+                <div class="card card-plazos">
+                    <h3>Plazos esta semana</h3>
+                    <p class="big-number" id="count-plazos">0</p>
+                    <a href="#plazos">Ver plazos →</a>
+                </div>
+                <div class="card card-alertas">
+                    <h3>Alertas</h3>
+                    <p class="big-number" id="count-alertas">0</p>
+                    <a href="#alertas">Ver alertas →</a>
+                </div>
+                <div class="card card-balance">
+                    <h3>Balance Mes</h3>
+                    <p class="big-number" id="count-balance">$0</p>
+                    <a href="#finanzas">Ver finanzas →</a>
                 </div>
             </div>
+        </section>
 
-            <div class="nav-section">
-                <div class="nav-label">Principal</div>
-                <div class="nav-item active" data-view="dashboard">
-                    <span>📊</span> Dashboard
-                </div>
-                <div class="nav-item" data-view="matters">
-                    <span>📁</span> Matters
-                </div>
-                <div class="nav-item" data-view="reuniones">
-                    <span>🎤</span> Reuniones
-                </div>
-                <div class="nav-item" data-view="documentos">
-                    <span>📄</span> Documentos
-                </div>
-                <div class="nav-item" data-view="calendario">
-                    <span>📅</span> Calendario
-                </div>
+        <!-- Sección Matters -->
+        <section id="matters" class="section hidden">
+            <h2>Mis Casos</h2>
+            <div class="toolbar">
+                <input type="search" id="search-matters" placeholder="Buscar caso...">
+                <select id="filter-area">
+                    <option value="">Todas las áreas</option>
+                    <option value="corporativo">Corporativo</option>
+                    <option value="litigio">Litigio</option>
+                    <option value="fiscal">Fiscal</option>
+                    <option value="laboral">Laboral</option>
+                </select>
             </div>
+            <div id="matters-table-container"></div>
+        </section>
 
-            <div class="nav-section">
-                <div class="nav-label">Google Workspace</div>
-                <div class="nav-item">
-                    <span>📁</span>
-                    <a id="drive-link" href="#" target="_blank" style="color: inherit; text-decoration: none;">Abrir Drive</a>
-                </div>
-                <div class="nav-item">
-                    <span>📅</span>
-                    <a href="https://calendar.google.com" target="_blank" style="color: inherit; text-decoration: none;">Ver Calendar</a>
-                </div>
-                <div class="nav-item">
-                    <span>📝</span>
-                    <a href="https://docs.google.com" target="_blank" style="color: inherit; text-decoration: none;">Abrir Docs</a>
-                </div>
+        <!-- Sección Documentos -->
+        <section id="documentos" class="section hidden">
+            <h2>Documentos</h2>
+            <div class="toolbar">
+                <button class="btn-primario" onclick="generateDocQuick('nda')">Generar NDA</button>
+                <button class="btn-primario" onclick="generateDocQuick('prestacion_servicios')">Generar Contrato</button>
+                <button class="btn-secundario" onclick="generateDocQuick('carta_cobranza')">Generar Carta Cobranza</button>
             </div>
+            <div id="templates-list"></div>
+        </section>
 
-            <div class="nav-section">
-                <div class="nav-label">Sistema</div>
-                <div class="nav-item" onclick="location.reload()">
-                    <span>🔄</span> Recargar
-                </div>
+        <!-- Sección Plazos -->
+        <section id="plazos" class="section hidden">
+            <h2>Plazos y Vencimientos</h2>
+            <div id="plazos-list"></div>
+        </section>
+
+        <!-- Sección Finanzas -->
+        <section id="finanzas" class="section hidden">
+            <h2>Finanzas</h2>
+            <div id="finanzas-resumen"></div>
+            <div class="toolbar" style="margin-top: 16px;">
+                <button id="btn-ingreso" class="btn-primario">+ Registrar Ingreso</button>
+                <button id="btn-egreso" class="btn-peligro">+ Registrar Egreso</button>
             </div>
-        </nav>
+            <div id="finanzas-tabla" style="margin-top: 16px;"></div>
+        </section>
 
-        <!-- Main Content -->
-        <main class="main" id="main-content">
-            <!-- Vistas (inicialmente ocultas excepto dashboard) -->
-            <div id="view-dashboard" class="view"></div>
-            <div id="view-matters" class="view hidden"></div>
-            <div id="view-reuniones" class="view hidden"></div>
-            <div id="view-documentos" class="view hidden"></div>
-            <div id="view-calendario" class="view hidden"></div>
-        </main>
+        <!-- Sección Aprobaciones -->
+        <section id="aprobaciones" class="section hidden">
+            <h2>Aprobaciones Pendientes</h2>
+            <div id="aprobaciones-list"></div>
+        </section>
+
+        <!-- Sección Alertas -->
+        <section id="alertas" class="section hidden">
+            <h2>Alertas del Sistema</h2>
+            <div id="alertas-list"></div>
+        </section>
+    </main>
+
+    <!-- Modal genérico -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="modal-title">Título</h3>
+                <button id="modal-close" class="btn-icon">×</button>
+            </header>
+            <div class="modal-body" id="modal-body"></div>
+            <footer class="modal-footer">
+                <button id="modal-cancel" class="btn-secundario">Cancelar</button>
+                <button id="modal-confirm" class="btn-primario">Confirmar</button>
+            </footer>
+        </div>
     </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container"></div>
 
     <!-- Scripts -->
     <script src="js/api.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/matters.js"></script>
-    <script src="js/reuniones.js"></script>
-    <script src="js/documentos.js"></script>
-    <script src="js/calendario.js"></script>
     <script src="js/finanzas.js"></script>
     <script src="js/app.js"></script>
 </body>
