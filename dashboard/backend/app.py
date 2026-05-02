@@ -207,6 +207,32 @@ def get_matter(matter_id: str):
             return m
     raise HTTPException(status_code=404, detail="Matter no encontrado")
 
+@app.put("/api/matters/{matter_id}")
+def update_matter(matter_id: str, data: MatterInput):
+    matters = load_json(MATTERS_FILE)
+    for m in matters:
+        if m.get("id") == matter_id:
+            m["cliente"] = data.cliente
+            m["area_practica"] = data.area_practica
+            m["descripcion"] = data.descripcion
+            m["deadline"] = data.deadline
+            m["prioridad"] = data.prioridad
+            if hasattr(data, 'estado') and data.estado:
+                m["estado"] = data.estado
+            save_json(MATTERS_FILE, matters)
+            return m
+    raise HTTPException(status_code=404, detail="Matter no encontrado")
+
+@app.delete("/api/matters/{matter_id}")
+def delete_matter(matter_id: str):
+    matters = load_json(MATTERS_FILE)
+    original_len = len(matters)
+    matters = [m for m in matters if m.get("id") != matter_id]
+    if len(matters) == original_len:
+        raise HTTPException(status_code=404, detail="Matter no encontrado")
+    save_json(MATTERS_FILE, matters)
+    return {"success": True, "message": f"Matter {matter_id} eliminado"}
+
 # ── Reuniones ─────────────────────────────────────────────
 @app.get("/api/reuniones")
 def list_reuniones(matter_id: Optional[str] = None):
