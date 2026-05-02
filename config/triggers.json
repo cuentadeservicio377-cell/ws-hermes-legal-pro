@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "1",
+  "triggers": [
+    {
+      "id": "nuevo_asunto",
+      "label": "Nuevo cliente / asunto",
+      "version": "1",
+      "agent": "intake",
+      "template": "Cliente: [nombre completo o razón social]\nEmpresa: [razón social o \"persona física\"]\nRFC: [RFC o \"sin RFC\"]\nContacto: [nombre del contacto si es empresa]\nTelefono: [número sin guiones]\nEmail: [correo]\nEspecialidad: [mercantil | laboral | civil | corporativo | fiscal | privacidad | litigios]\nTipo de asunto: [descripción breve]\nDescripción: [detalle del asunto — incluir monto si difiere de $85,000 MXN]\nUrgencia: [normal | urgente | muy urgente]",
+      "requiredFields": ["Cliente", "Especialidad", "Tipo de asunto", "Descripción"],
+      "exampleFilled": "Cliente: Innovatech Digital S.A. de C.V.\nEmpresa: Innovatech Digital S.A. de C.V.\nRFC: IDI210330TF6\nContacto: Lic. Andrea Fuentes\nTelefono: 5512345678\nEmail: afuentes@innovatechdigital.mx\nEspecialidad: mercantil\nTipo de asunto: Contrato de Prestación de Servicios Profesionales\nDescripción: Empresa de software requiere contrato con consultor externo durante 6 meses. Monto: $180,000 MXN.\nUrgencia: normal"
+    },
+    {
+      "id": "generar_documento",
+      "label": "Generar documento",
+      "version": "1",
+      "agent": "documentos",
+      "template": "GENERAR DOCUMENTO — [tipo]",
+      "requiredFields": ["tipo"],
+      "exampleFilled": "GENERAR DOCUMENTO — nda\nTipo: bilateral\nPartes: Innovatech Digital S.A. de C.V. y Consultor Carlos Pérez\nDuración confidencialidad: 3 años\nFecha vencimiento: 2029-04-01"
+    },
+    {
+      "id": "generar_paquete",
+      "label": "Generar paquete",
+      "version": "1",
+      "agent": "documentos",
+      "template": "GENERAR PAQUETE — [tipo1] + [tipo2] + [tipo3]",
+      "requiredFields": ["tipos"],
+      "exampleFilled": "GENERAR PAQUETE — convenio_accionistas + nda + acta_asamblea\nSocios: Dr. Rodrigo Castillo (60%), Dra. Ana Méndez (25%), Ing. Luis Vargas (15%)\nInversionista: Fondo Capital Norte S.C.\nTipo NDA: bilateral\nFecha de cierre: 15 mayo 2026\nCapital social: $2,500,000 MXN"
+    },
+    {
+      "id": "tarea",
+      "label": "Tarea con plazo",
+      "version": "1",
+      "agent": "asuntos",
+      "template": "TAREA — [descripción de la tarea]: vence YYYY-MM-DD",
+      "requiredFields": ["descripcion", "fecha"],
+      "exampleFilled": "TAREA — Enviar borrador del contrato a Lic. Fuentes para revisión: vence 2026-04-07"
+    },
+    {
+      "id": "plazo_judicial",
+      "label": "Plazo judicial",
+      "version": "1",
+      "agent": "asuntos",
+      "template": "PLAZO JUDICIAL — [descripción]: YYYY-MM-DD [juzgado opcional]",
+      "requiredFields": ["descripcion", "fecha"],
+      "exampleFilled": "PLAZO JUDICIAL — Audiencia de conciliación: 2026-05-05 Junta Local de Conciliación y Arbitraje de Naucalpan Sala 3"
+    },
+    {
+      "id": "actualizacion",
+      "label": "Actualización",
+      "version": "1",
+      "agent": "asuntos",
+      "template": "ACTUALIZACIÓN — [texto libre del estado]",
+      "requiredFields": ["texto"],
+      "exampleFilled": "ACTUALIZACIÓN — Cliente revisó el NDA y acepta todas las cláusulas. Pendiente firma del Convenio de Accionistas en presencia de notario."
+    },
+    {
+      "id": "cerrar_asunto",
+      "label": "Cerrar asunto",
+      "version": "1",
+      "agent": "asuntos",
+      "template": "CERRAR ASUNTO — [motivo: acuerdo | sentencia | desistimiento | otro]",
+      "requiredFields": ["motivo"],
+      "exampleFilled": "CERRAR ASUNTO — acuerdo"
+    },
+    {
+      "id": "anticipo_recibido",
+      "label": "Anticipo recibido",
+      "version": "1",
+      "agent": "cobranza",
+      "template": "ANTICIPO RECIBIDO — $[monto] MXN el [fecha]",
+      "requiredFields": ["monto", "fecha"],
+      "exampleFilled": "ANTICIPO RECIBIDO — $42,500 MXN el 3 abr 2026"
+    },
+    {
+      "id": "abono_recibido",
+      "label": "Abono recibido",
+      "version": "1",
+      "agent": "cobranza",
+      "template": "ABONO RECIBIDO — $[monto] MXN el [fecha]",
+      "requiredFields": ["monto", "fecha"],
+      "exampleFilled": "ABONO RECIBIDO — $20,000 MXN el 15 may 2026"
+    },
+    {
+      "id": "pago_final_recibido",
+      "label": "Pago final",
+      "version": "1",
+      "agent": "cobranza",
+      "template": "PAGO FINAL RECIBIDO — $[monto] MXN el [fecha]",
+      "requiredFields": ["monto", "fecha"],
+      "exampleFilled": "PAGO FINAL RECIBIDO — $42,500 MXN el 30 sep 2026"
+    },
+    {
+      "id": "reporte_semanal",
+      "label": "Reporte semanal",
+      "version": "1",
+      "agent": "admin",
+      "template": "REPORTE SEMANAL",
+      "requiredFields": [],
+      "exampleFilled": "REPORTE SEMANAL"
+    },
+    {
+      "id": "reporte_matter",
+      "label": "Reporte de este asunto",
+      "version": "1",
+      "agent": "admin",
+      "template": "REPORTE MATTER — MAT-XXX",
+      "requiredFields": ["matterId"],
+      "exampleFilled": "REPORTE MATTER — MAT-003"
+    },
+    {
+      "id": "leccion_aprendida",
+      "label": "Registrar lección aprendida",
+      "version": "1",
+      "agent": "admin",
+      "template": "LECCIÓN APRENDIDA — [tipo_doc]: [insight completo]",
+      "requiredFields": ["tipo_doc", "insight"],
+      "exampleFilled": "LECCIÓN APRENDIDA — convenio_accionistas: Para startups pre-seed, incluir por default la cláusula de right of first refusal — los inversionistas ángel siempre la piden."
+    }
+  ]
+}

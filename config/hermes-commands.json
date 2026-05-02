@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "description": "Comandos Telegram para operación legal via Hermes Agent",
+  "prefix": "/",
+  "commands": {
+    "matter": {
+      "description": "Gestionar matters (asuntos legales)",
+      "subcommands": {
+        "nuevo": {
+          "description": "Crear nuevo matter",
+          "args": ["nombre"],
+          "optional_args": ["area", "prioridad", "cliente"],
+          "example": "/matter nuevo Innovatech Digital area=Corporativo"
+        },
+        "list": {
+          "description": "Listar matters activos",
+          "example": "/matter list"
+        }
+      },
+      "example": "/matter nuevo Cliente S.A."
+    },
+    "contrato": {
+      "description": "Generar documento legal",
+      "args": ["template"],
+      "optional_args": ["matter_id"],
+      "example": "/contrato nda WIL-001"
+    },
+    "templates": {
+      "description": "Listar templates disponibles",
+      "example": "/templates"
+    },
+    "plazo": {
+      "description": "Crear deadline o plazo",
+      "args": ["matter_id", "descripcion", "fecha"],
+      "example": "/plazo WIL-001 'Audiencia inicial' 2026-05-20"
+    },
+    "alerta": {
+      "description": "Ver alertas pendientes",
+      "optional_args": ["matter_id"],
+      "example": "/alerta"
+    },
+    "status": {
+      "description": "Estado general del despacho",
+      "example": "/status"
+    },
+    "abrir": {
+      "description": "Abrir carpeta del matter",
+      "args": ["matter_id"],
+      "example": "/abrir WIL-001"
+    }
+  }
+}
