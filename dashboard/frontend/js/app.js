@@ -122,16 +122,7 @@ const App = {
     },
 
     async loadMatters() {
-        const container = document.getElementById('view-matters');
-        container.innerHTML = `
-            <div class="header">
-                <h1>Matters</h1>
-                <button class="btn btn-primary" onclick="App.showModal('matter-form')">+ Nuevo Matter</button>
-            </div>
-            <div class="alert alert-yellow">
-                🏗️ Vista en construcción. Se implementará en FASE 3.
-            </div>
-        `;
+        await Matters.render();
     },
 
     async loadReuniones() {
