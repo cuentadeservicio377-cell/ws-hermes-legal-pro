@@ -206,7 +206,6 @@ class HermesLegalCommands:
             # Verificar template existe
             template_file = self.repo_dir / "motor_kami" / "templates" / f"{template}.json"
             if not template_file.exists():
-                # Listar templates disponibles
                 templates_dir = self.repo_dir / "motor_kami" / "templates"
                 disponibles = [f.stem for f in templates_dir.glob("*.json") if f.stem != "index"]
                 return {
@@ -217,25 +216,113 @@ class HermesLegalCommands:
                     )
                 }
             
-            # Preparar comando al motor
-            motor_script = self.repo_dir / "motor_kami" / "motor_kami.py"
+            # Cargar template y matter
+            import tempfile
+            import os
             
+            with open(template_file, "r", encoding="utf-8") as f:
+                template_data = json.load(f)
+            
+            # Obtener datos del matter
+            matters = self._load_json(self.matters_file, [])
+            matter = next((m for m in matters if m["id"] == matter_id), None) if matter_id else None
+            
+            # Construir datos para el motor
+            template_label = template_data.get("metadata", {}).get("label", template)
+            cliente_nombre = matter.get("cliente", matter.get("nombre", "Cliente")) if matter else kwargs.get("cliente", "Cliente")
+            
+            # Construir cláusulas apropiadas según template
+            if template == "nda":
+                clausulas_data = [
+                    {"titulo": "Objeto", "subclausulas": [
+                        "Las partes acuerdan mantener la confidencialidad de toda información intercambiada."
+                    ]},
+                    {"titulo": "Información Confidencial", "subclausulas": [
+                        "Se considera información confidencial todo dato técnico, comercial, financiero o de cualquier naturaleza."
+                    ]},
+                    {"titulo": "Obligaciones", "subclausulas": [
+                        "No divulgar la información confidencial a terceros.",
+                        "Usar la información solo para los fines del presente acuerdo.",
+                        "Devolver o destruir la información al término del acuerdo."
+                    ]},
+                    {"titulo": "Vigencia", "subclausulas": [
+                        "El presente acuerdo tendrá una vigencia de 2 años."
+                    ]}
+                ]
+            else:
+                clausulas_data = [
+                    {"titulo": "Objeto", "subclausulas": [
+                        matter.get("descripcion", "Servicios legales profesionales") if matter else "Servicios legales profesionales"
+                    ]},
+                    {"titulo": "Obligaciones de las Partes", "subclausulas": [
+                        "El Prestador se obliga a prestar los servicios con la debida diligencia profesional.",
+                        "El Cliente se obliga a proporcionar la información necesaria para la prestación de los servicios."
+                    ]},
+                    {"titulo": "Honorarios", "subclausulas": [
+                        "Los honorarios serán pactados en documento anexo."
+                    ]},
+                    {"titulo": "Vigencia", "subclausulas": [
+                        "El presente contrato tendrá vigencia indefinida."
+                    ]}
+                ]
+            
+            doc_data = {
+                "tipo": "contrato",
+                "titulo": kwargs.get("titulo", template_label),
+                "marca": "Hermes Legal Pro",
+                "numero_contrato": f"{matter_id}-{template}" if matter_id else template,
+                "fecha": datetime.now().strftime("%d de %B de %Y"),
+                "subtitulo": kwargs.get("subtitulo", ""),
+                "antecedentes": matter.get("descripcion", "Servicios legales profesionales") if matter else "Servicios legales profesionales",
+                "prestador": {
+                    "nombre": "We Law S.C.",
+                    "rfc": "WEL123456ABC",
+                    "domicilio": "Ciudad de México",
+                    "representante": "Lic. Pablo Meneses",
+                    "email": "contacto@welaw.mx"
+                },
+                "cliente": {
+                    "nombre": cliente_nombre,
+                    "rfc": kwargs.get("rfc_cliente", "XAXX010101000"),
+                    "domicilio": kwargs.get("domicilio_cliente", "México"),
+                    "representante": kwargs.get("representante_cliente", cliente_nombre),
+                    "email": kwargs.get("email_cliente", "")
+                },
+                "clausulas": clausulas_data,
+                "anexos": [],
+                "cliente_nombre": cliente_nombre
+            }
+            
+            # Escribir JSON temporal
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+                json.dump(doc_data, tmp, ensure_ascii=False)
+                tmp_path = tmp.name
+            
+            # Preparar output path
+            output_dir = self.repo_dir / "motor_kami" / "output"
+            output_dir.mkdir(exist_ok=True)
+            output_filename = kwargs.get("output_filename", f"{matter_id}_{template}.pdf" if matter_id else f"{template}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+            output_path = output_dir / output_filename
+            
+            # Ejecutar motor
+            motor_script = self.repo_dir / "motor_kami" / "motor_kami.py"
             cmd = [
                 sys.executable,
                 str(motor_script),
-                "--template", template
+                "--input", tmp_path,
+                "--output", str(output_path),
+                "--preview-html"
             ]
             
-            if matter_id:
-                cmd.extend(["--matter", matter_id])
-            
-            # Ejecutar motor
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd=str(self.repo_dir / "motor_kami")
+                timeout=120
             )
+            
+            # Limpiar archivo temporal
+            os.unlink(tmp_path)
             
             if result.returncode != 0:
                 return {
@@ -243,27 +330,28 @@ class HermesLegalCommands:
                     "mensaje": f"❌ Motor Kami error:\n{result.stderr}"
                 }
             
-            # Buscar PDF generado
-            output_dir = self.repo_dir / "motor_kami" / "output"
-            pdfs = sorted(output_dir.glob("*.pdf"), key=lambda p: p.stat().st_mtime, reverse=True)
+            mensaje = (
+                f"📝 Documento generado:\n"
+                f"   Template: {template_label}\n"
+                f"   📄 {output_filename}\n"
+                f"   📁 {output_dir}"
+            )
             
-            if pdfs:
-                latest_pdf = pdfs[0]
-                return {
-                    "status": "ok",
-                    "mensaje": (
-                        f"📝 Documento generado:\n"
-                        f"   Template: {template}\n"
-                        f"   📄 {latest_pdf.name}\n"
-                        f"   📁 {latest_pdf.parent}"
-                    ),
-                    "pdf_path": str(latest_pdf)
-                }
-            else:
-                return {
-                    "status": "ok",
-                    "mensaje": f"✅ Documento generado (sin PDF en output)"
-                }
+            # Subir a Drive si el matter tiene carpeta
+            if matter and matter.get("drive_folder_id"):
+                try:
+                    from scripts.drive_manager import DriveManager
+                    dm = DriveManager()
+                    drive_result = dm.upload_pdf(str(output_path), cliente_nombre)
+                    mensaje += f"\n📤 Drive: {drive_result['link']}"
+                except Exception as e:
+                    mensaje += f"\n⚠️  Drive: {e}"
+            
+            return {
+                "status": "ok",
+                "mensaje": mensaje,
+                "pdf_path": str(output_path)
+            }
                 
         except Exception as e:
             return {

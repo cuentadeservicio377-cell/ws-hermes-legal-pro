@@ -18,3 +18,4 @@ __pycache__/
 .DS_Store
 config/client_secret.json
 config/token.json
+motor_kami/output/
