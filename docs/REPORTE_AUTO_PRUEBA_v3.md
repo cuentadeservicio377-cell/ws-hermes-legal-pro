@@ -69,7 +69,20 @@
 | js/finanzas.js | ✅ HTTP 200 |
 | css/styles.css | ✅ HTTP 200 |
 | Navegador abierto | ✅ |
-| Screenshot | ⚠️ screencapture falló en headless |
+
+### Screenshots capturados
+
+| Vista | Archivo | Tamaño |
+|-------|---------|--------|
+| Dashboard (Inicio) | `01_dashboard_inicio.png` | 80 KB |
+| Matters (Casos) | `02_matters.png` | 73 KB |
+| Documentos | `03_documentos.png` | 127 KB |
+| Plazos | `04_plazos.png` | 85 KB |
+| Finanzas | `05_finanzas.png` | 79 KB |
+| Aprobaciones | `06_aprobaciones.png` | 73 KB |
+| Alertas | `07_alertas.png` | 74 KB |
+
+Todas las capturas disponibles en `docs/screenshots/`. El dashboard muestra sidebar con logo Willow, 7 enlaces de navegación, header con acciones rápidas, 4 tarjetas de resumen, y cada sección con su contenido completo.
 
 ---
 
