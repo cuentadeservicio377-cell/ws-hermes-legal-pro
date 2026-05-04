@@ -26,7 +26,7 @@ Una firma legal mexicana que atiende a Pragma Studio (y futuros clientes). El cl
 
 ### Datos del cliente real
 - **Cliente:** Pragma Studio (Juan Antonio Angel Ramirez)
-- **Email:** juan@pragmaestudio.com
+- **Email:** contacto@wscapital.ai
 - **Área:** Mercantil / Contratos / Cobranza
 - **Matter ID:** PRAG-001
 - **Status:** Active, prioridad HIGH
@@ -118,7 +118,7 @@ Una firma legal mexicana que atiende a Pragma Studio (y futuros clientes). El cl
   "cliente": {
     "razon_social": "Pragma Studio",
     "representante": "Juan Antonio Angel Ramirez",
-    "email": "juan@pragmaestudio.com",
+    "email": "contacto@wscapital.ai",
     "rfc": "...",
     "domicilio_fiscal": "...",
     "telefono": "...",

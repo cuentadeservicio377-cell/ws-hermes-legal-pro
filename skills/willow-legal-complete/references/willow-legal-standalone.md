@@ -117,7 +117,7 @@ Antes de declarar "completo", auditar TODO el sistema:
 ## Cliente actual: Pragma Studio
 - **Matter:** PRAG-001
 - **Representante:** Juan Antonio Angel Ramirez
-- **Email:** juan@pragmaestudio.com
+- **Email:** contacto@wscapital.ai
 - **Área:** Mercantil / Contratos / Cobranza
 - **Problemas:** 8 identificados (disputa Andy, contrato hostil, actas, etc.)
 - **Documentos pendientes:** 8

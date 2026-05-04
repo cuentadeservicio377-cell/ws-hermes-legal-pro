@@ -23,7 +23,7 @@
 
 ### Cliente: Pragma Studio (PRAG-001)
 - **Representante:** Juan Antonio Angel Ramirez
-- **Email:** juan@pragmaestudio.com
+- **Email:** contacto@wscapital.ai
 - **Área:** Mercantil / Contratos / Cobranza
 - **Status:** Active | Prioridad: HIGH
 

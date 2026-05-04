@@ -19,3 +19,6 @@ __pycache__/
 config/client_secret.json
 config/token.json
 motor_kami/output/
+
+# Profile backups
+*.tar.gz
