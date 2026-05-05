@@ -23,6 +23,9 @@ from config.config_loader import Config
 from core.datastore import JSONDatastore
 from core.id_generator import IDGenerator
 
+# v2.0: Importar Motor Kami directamente (no via subprocess)
+from motor_kami.motor_kami import generar_documento_real
+
 # ── Paths ─────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "datos"
@@ -436,7 +439,7 @@ def get_template(key: str):
 
 @app.post("/api/matter/{matter_id}/generar-documento")
 def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
-    """Genera un documento PDF usando Motor Kami v3"""
+    """Genera un documento PDF usando Motor Kami v3 — v2.0: direct call, no subprocess"""
     matters = load_json("matters")
     matter = None
     for m in matters:
@@ -452,38 +455,37 @@ def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
         raise HTTPException(status_code=404, detail=f"Template '{req.template_key}' no encontrado")
     
     # Preparar output
-    output_dir = MOTOR_DIR / "output"
-    output_dir.mkdir(exist_ok=True)
+    output_dir = Path(config.motor_kami.get('output_dir', '~/.willowlegal/output/')).expanduser()
+    output_dir.mkdir(parents=True, exist_ok=True)
     filename = req.output_filename or f"{matter_id}_{req.template_key}_{date.today().strftime('%Y%m%d')}.pdf"
     output_path = output_dir / filename
     
-    # Construir bloques para Kami
-    blocks = construir_bloques_desde_matter(matter, req.template_key, req.datos_extra)
+    # v2.0: Usar generar_documento_real() directamente — no subprocess
+    despacho_data = {
+        "nombre": config.despacho.nombre,
+        "rfc": config.despacho.rfc,
+        "representante": config.despacho.representante,
+        "email": config.despacho.email,
+        "domicilio": config.despacho.domicilio,
+        "telefono": config.despacho.telefono,
+    }
     
-    # Generar via Motor Kami CLI usando archivo temporal
-    import tempfile
     try:
-        kami_input = {"blocks": blocks, "options": {"titulo": f"Documento {req.template_key}"}}
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
-            json.dump(kami_input, tmp, ensure_ascii=False)
-            tmp_path = tmp.name
-        
-        result = subprocess.run(
-            [sys.executable, str(MOTOR_DIR / "motor_kami.py"), "--input", tmp_path, "--output", str(output_path)],
-            capture_output=True,
-            text=True,
-            timeout=60
+        result = generar_documento_real(
+            template_key=req.template_key,
+            matter_data=matter,
+            output_path=output_path,
+            extra_vars=req.datos_extra,
+            despacho_data=despacho_data
         )
         
-        os.unlink(tmp_path)  # Limpiar archivo temporal
-        
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"Error Motor Kami: {result.stderr}")
+        if not result.get("success"):
+            raise HTTPException(status_code=500, detail=result.get("error", "Error desconocido del Motor Kami"))
         
         # Actualizar documentos del matter
         documentos = load_json("documentos")
         doc = {
-            "id": f"DOC-{len(documentos)+1:04d}",
+            "id": id_generator.generate_document_id(),
             "matter_id": matter_id,
             "template_key": req.template_key,
             "estado": "generado",
@@ -498,11 +500,10 @@ def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
             "success": True,
             "file_path": str(output_path),
             "file_size_kb": round(output_path.stat().st_size / 1024, 1),
-            "documento_id": doc["id"]
+            "documento_id": doc["id"],
+            "template_label": result.get("template_label", req.template_key)
         }
         
-    except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=500, detail="Timeout generando documento")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
 
@@ -792,8 +793,9 @@ def crear_carpeta_cliente(cliente: str):
     return base
 
 def construir_bloques_desde_matter(matter: Dict, template_key: str, datos_extra: Dict) -> List[Dict]:
-    """Construye bloques para Motor Kami desde un matter"""
+    """Construye bloques para Motor Kami desde un matter — v2.0: usa config.despacho"""
     blocks = []
+    despacho = config.despacho
     
     # Cover page
     blocks.append({
@@ -811,9 +813,11 @@ def construir_bloques_desde_matter(matter: Dict, template_key: str, datos_extra:
         "type": "parties_block",
         "data": {
             "prestador": {
-                "nombre": "We Law S.C.",
-                "rfc": "WEL123456ABC",
-                "domicilio": "Ciudad de México"
+                "nombre": despacho.nombre,
+                "rfc": despacho.rfc,
+                "domicilio": despacho.domicilio,
+                "representante": despacho.representante,
+                "email": despacho.email,
             },
             "cliente": {
                 "nombre": matter.get("cliente", ""),
@@ -837,7 +841,7 @@ def construir_bloques_desde_matter(matter: Dict, template_key: str, datos_extra:
     blocks.append({
         "type": "signature_block",
         "data": {
-            "prestador": {"nombre": "We Law S.C.", "puesto": "Representante Legal"},
+            "prestador": {"nombre": despacho.nombre, "puesto": "Representante Legal"},
             "cliente": {"nombre": matter.get("cliente", ""), "puesto": "Representante Legal"}
         }
     })

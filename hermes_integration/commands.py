@@ -8,44 +8,79 @@ Uso:
     cmd = HermesLegalCommands()
     result = cmd.crear_matter("Innovatech Digital")
     print(result["mensaje"])
+
+v2.0: Migrado a usar config.yaml + JSONDatastore + IDGenerator
 """
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 from datetime import datetime
+
+# v2.0: Importar core
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config.config_loader import Config
+from core.datastore import JSONDatastore
+from core.id_generator import IDGenerator
 
 
 class HermesLegalCommands:
     """
     Interfaz de comandos para operación legal via Hermes Agent.
     
-    Mantiene compatibilidad con:
-    - Modo Hermes (Telegram): comandos tipo /matter, /contrato
-    - Modo Dashboard: mismo backend de datos
+    v2.0: Usa configuración centralizada y datastore unificado.
     """
     
-    def __init__(self, base_dir="~/WillowLegal"):
+    def __init__(self, base_dir=None):
         """
-        Inicializar con directorio base.
+        Inicializar con configuración centralizada.
         
         Args:
-            base_dir: Directorio raíz de WillowLegal (default: ~/WillowLegal)
+            base_dir: (legacy, ignorado en v2.0) Se usa config.datastore.path
         """
-        self.base_dir = Path(base_dir).expanduser()
-        self.datos_dir = self.base_dir / "datos"
-        self.datos_dir.mkdir(parents=True, exist_ok=True)
+        # v2.0: Configuración centralizada
+        self.config = Config.load()
+        self.datastore = JSONDatastore(
+            self.config.datastore.path,
+            self.config.datastore.backup_dir
+        )
+        self.id_generator = IDGenerator(self.datastore, self.config.ids if isinstance(self.config.ids, dict) else self.config.ids.__dict__)
         
-        # Archivos de datos
-        self.matters_file = self.datos_dir / "matters.json"
-        self.documentos_file = self.datos_dir / "documentos.json"
-        self.alertas_file = self.datos_dir / "alertas.json"
-        self.finanzas_file = self.datos_dir / "finanzas.json"
-        
-        # Referencia al motor
-        self.motor_dir = self.base_dir / "00_Sistema" / "Motor_Kami"
-        self.repo_dir = Path(__file__).parent.parent  # ws-hermes-legal-pro
+        # v2.0: Referencia al repo para templates y motor
+        self.repo_dir = Path(__file__).parent.parent
+        self.motor_dir = self.repo_dir / "motor_kami"
+    
+    # ============================================================
+    # HELPERS
+    # ============================================================
+    
+    def _safe_name(self, nombre: str) -> str:
+        return "".join(c for c in nombre if c.isalnum() or c in " _-").strip()
+    
+    def _crear_carpetas_matter(self, carpeta_path: str):
+        base = Path(carpeta_path)
+        subcarpetas = [
+            "01_Intake",
+            "02_Contratos/Borradores",
+            "02_Contratos/Firmados",
+            "02_Contratos/Anexos",
+            "03_Correspondencia/Entrante",
+            "03_Correspondencia/Saliente",
+            "04_Litigio/Demandas",
+            "04_Litigio/Contestaciones",
+            "04_Litigio/Pruebas",
+            "04_Litigio/Audiencias",
+            "05_Facturacion/Cotizaciones",
+            "05_Facturacion/Facturas",
+            "05_Facturacion/Pagos",
+            "06_Entregables/Documentos_Finales",
+            "06_Entregables/Presentaciones",
+            "06_Entregables/Reportes",
+            "07_Archivo/Cerrado"
+        ]
+        for sub in subcarpetas:
+            (base / sub).mkdir(parents=True, exist_ok=True)
+        return base
     
     # ============================================================
     # MATTERS
@@ -55,42 +90,35 @@ class HermesLegalCommands:
         """
         Crear nuevo matter desde comando Telegram.
         
-        Args:
-            nombre: Nombre del cliente o asunto
-            cliente: (opcional) Nombre del cliente si difiere
-            area: (opcional) Área legal (default: Mercantil)
-            prioridad: (opcional) baja/media/alta (default: media)
-            
-        Returns:
-            dict con status, matter_id, mensaje
+        v2.0: Usa IDGenerator para IDs WIL-XXX y datastore para persistencia.
         """
         try:
-            # Cargar matters existentes
-            matters = self._load_json(self.matters_file, [])
+            # v2.0: Generar ID via IDGenerator
+            matter_id = self.id_generator.generate_matter_id()
             
-            # Generar ID
-            matter_id = f"WIL-{len(matters)+1:03d}"
-            
-            # Crear matter
+            # v2.0: Crear matter con estructura unificada
             matter = {
                 "id": matter_id,
                 "nombre": nombre,
                 "cliente": kwargs.get("cliente", nombre),
-                "estado": "Intake",
-                "area": kwargs.get("area", "Mercantil"),
+                "estado": "activo",
+                "area_practica": kwargs.get("area", "Mercantil"),
                 "materia": kwargs.get("materia", "corporativo"),
                 "prioridad": kwargs.get("prioridad", "media"),
-                "creado": datetime.now().isoformat(),
+                "descripcion": kwargs.get("descripcion", ""),
+                "fecha_creacion": datetime.now().isoformat(),
                 "actualizado": datetime.now().isoformat(),
                 "next_step": "Intake inicial pendiente",
                 "blocker": "none",
-                "carpeta": str(self.base_dir / "01_Clientes" / self._safe_name(nombre)),
+                "carpeta": str(Path.home() / "WillowLegal" / "01_Clientes" / self._safe_name(nombre)),
                 "deadline": kwargs.get("deadline", None),
-                "descripcion": kwargs.get("descripcion", "")
+                "reuniones": [],
+                "documentos": [],
+                "tareas": []
             }
             
-            matters.append(matter)
-            self._save_json(self.matters_file, matters)
+            # v2.0: Guardar via datastore
+            self.datastore.insert("matters", matter)
             
             # Crear estructura de carpetas
             self._crear_carpetas_matter(matter["carpeta"])
@@ -102,6 +130,11 @@ class HermesLegalCommands:
                 drive_folder_id = dm.create_client_structure(matter["cliente"])
                 matter["drive_folder_id"] = drive_folder_id
                 matter["drive_link"] = f"https://drive.google.com/drive/folders/{drive_folder_id}"
+                # Actualizar en datastore
+                self.datastore.update("matters", "id", matter_id, {
+                    "drive_folder_id": drive_folder_id,
+                    "drive_link": matter["drive_link"]
+                })
                 print(f"📁 Drive: Carpeta creada {drive_folder_id}")
             except Exception as e:
                 print(f"⚠️  Drive no disponible: {e}")
@@ -115,7 +148,7 @@ class HermesLegalCommands:
                     f"✅ Matter creado: {matter_id}\n"
                     f"📁 Carpeta: {matter['carpeta']}\n"
                     f"📋 Next step: {matter['next_step']}\n"
-                    f"🏷️  Área: {matter['area']}\n"
+                    f"🏷️  Área: {matter['area_practica']}\n"
                     f"📁 Drive: {matter.get('drive_link', 'No disponible')}"
                 )
             }
@@ -129,7 +162,7 @@ class HermesLegalCommands:
     def listar_matters(self, limite: int = 10) -> dict:
         """Listar matters activos para mostrar en Telegram."""
         try:
-            matters = self._load_json(self.matters_file, [])
+            matters = self.datastore.get("matters")
             
             if not matters:
                 return {
@@ -139,9 +172,9 @@ class HermesLegalCommands:
             
             lines = ["📋 MATTERS ACTIVOS:"]
             for m in matters[-limite:]:
-                emoji = "🟢" if m.get("estado") == "Activo" else "🟡" if m.get("estado") == "Intake" else "🔴"
+                emoji = "🟢" if m.get("estado") == "activo" else "🟡" if m.get("estado") == "Intake" else "🔴"
                 drive_icon = "📁" if m.get("drive_folder_id") else "❌"
-                lines.append(f"  {emoji} {m['id']}: {m['nombre']} {drive_icon}")
+                lines.append(f"  {emoji} {m['id']}: {m.get('nombre', m.get('cliente', 'Sin nombre'))} {drive_icon}")
             
             return {
                 "status": "ok",
@@ -158,9 +191,8 @@ class HermesLegalCommands:
     def ver_matter(self, matter_id: str) -> dict:
         """Ver detalle de un matter específico."""
         try:
-            matters = self._load_json(self.matters_file, [])
+            matter = self.datastore.find_one("matters", id=matter_id)
             
-            matter = next((m for m in matters if m["id"] == matter_id), None)
             if not matter:
                 return {
                     "status": "error",
@@ -170,9 +202,9 @@ class HermesLegalCommands:
             return {
                 "status": "ok",
                 "mensaje": (
-                    f"📋 {matter['id']}: {matter['nombre']}\n"
+                    f"📋 {matter['id']}: {matter.get('nombre', matter.get('cliente', 'N/A'))}\n"
                     f"   Estado: {matter['estado']}\n"
-                    f"   Área: {matter['area']}\n"
+                    f"   Área: {matter.get('area_practica', matter.get('area', 'N/A'))}\n"
                     f"   Next step: {matter.get('next_step', 'N/A')}\n"
                     f"   Blocker: {matter.get('blocker', 'none')}\n"
                     f"   📁 {matter['carpeta']}"
@@ -194,19 +226,13 @@ class HermesLegalCommands:
         """
         Generar documento legal via Motor Kami.
         
-        Args:
-            template: Key del template (nda, prestacion_servicios, etc.)
-            matter_id: (opcional) Matter asociado
-            variables: (opcional) Dict con variables adicionales
-            
-        Returns:
-            dict con status, mensaje, path del PDF
+        v2.0: Usa generar_documento_real() directamente — no subprocess.
         """
         try:
             # Verificar template existe
-            template_file = self.repo_dir / "motor_kami" / "templates" / f"{template}.json"
+            template_file = self.motor_dir / "templates" / f"{template}.json"
             if not template_file.exists():
-                templates_dir = self.repo_dir / "motor_kami" / "templates"
+                templates_dir = self.motor_dir / "templates"
                 disponibles = [f.stem for f in templates_dir.glob("*.json") if f.stem != "index"]
                 return {
                     "status": "error",
@@ -216,123 +242,56 @@ class HermesLegalCommands:
                     )
                 }
             
-            # Cargar template y matter
-            import tempfile
-            import os
-            
-            with open(template_file, "r", encoding="utf-8") as f:
-                template_data = json.load(f)
-            
             # Obtener datos del matter
-            matters = self._load_json(self.matters_file, [])
-            matter = next((m for m in matters if m["id"] == matter_id), None) if matter_id else None
+            matter = self.datastore.find_one("matters", id=matter_id) if matter_id else None
             
-            # Construir datos para el motor
-            template_label = template_data.get("metadata", {}).get("label", template)
-            cliente_nombre = matter.get("cliente", matter.get("nombre", "Cliente")) if matter else kwargs.get("cliente", "Cliente")
-            
-            # Construir cláusulas apropiadas según template
-            if template == "nda":
-                clausulas_data = [
-                    {"titulo": "Objeto", "subclausulas": [
-                        "Las partes acuerdan mantener la confidencialidad de toda información intercambiada."
-                    ]},
-                    {"titulo": "Información Confidencial", "subclausulas": [
-                        "Se considera información confidencial todo dato técnico, comercial, financiero o de cualquier naturaleza."
-                    ]},
-                    {"titulo": "Obligaciones", "subclausulas": [
-                        "No divulgar la información confidencial a terceros.",
-                        "Usar la información solo para los fines del presente acuerdo.",
-                        "Devolver o destruir la información al término del acuerdo."
-                    ]},
-                    {"titulo": "Vigencia", "subclausulas": [
-                        "El presente acuerdo tendrá una vigencia de 2 años."
-                    ]}
-                ]
-            else:
-                clausulas_data = [
-                    {"titulo": "Objeto", "subclausulas": [
-                        matter.get("descripcion", "Servicios legales profesionales") if matter else "Servicios legales profesionales"
-                    ]},
-                    {"titulo": "Obligaciones de las Partes", "subclausulas": [
-                        "El Prestador se obliga a prestar los servicios con la debida diligencia profesional.",
-                        "El Cliente se obliga a proporcionar la información necesaria para la prestación de los servicios."
-                    ]},
-                    {"titulo": "Honorarios", "subclausulas": [
-                        "Los honorarios serán pactados en documento anexo."
-                    ]},
-                    {"titulo": "Vigencia", "subclausulas": [
-                        "El presente contrato tendrá vigencia indefinida."
-                    ]}
-                ]
-            
-            doc_data = {
-                "tipo": "contrato",
-                "titulo": kwargs.get("titulo", template_label),
-                "marca": "Hermes Legal Pro",
-                "numero_contrato": f"{matter_id}-{template}" if matter_id else template,
-                "fecha": datetime.now().strftime("%d de %B de %Y"),
-                "subtitulo": kwargs.get("subtitulo", ""),
-                "antecedentes": matter.get("descripcion", "Servicios legales profesionales") if matter else "Servicios legales profesionales",
-                "prestador": {
-                    "nombre": "We Law S.C.",
-                    "rfc": "WEL123456ABC",
-                    "domicilio": "Ciudad de México",
-                    "representante": "Lic. Pablo Meneses",
-                    "email": "contacto@welaw.mx"
-                },
-                "cliente": {
-                    "nombre": cliente_nombre,
-                    "rfc": kwargs.get("rfc_cliente", "XAXX010101000"),
-                    "domicilio": kwargs.get("domicilio_cliente", "México"),
-                    "representante": kwargs.get("representante_cliente", cliente_nombre),
-                    "email": kwargs.get("email_cliente", "")
-                },
-                "clausulas": clausulas_data,
-                "anexos": [],
-                "cliente_nombre": cliente_nombre
+            # v2.0: Usar despacho desde config
+            despacho_data = {
+                "nombre": self.config.despacho.nombre,
+                "rfc": self.config.despacho.rfc,
+                "representante": self.config.despacho.representante,
+                "email": self.config.despacho.email,
+                "domicilio": self.config.despacho.domicilio,
             }
             
-            # Escribir JSON temporal
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
-                json.dump(doc_data, tmp, ensure_ascii=False)
-                tmp_path = tmp.name
-            
             # Preparar output path
-            output_dir = self.repo_dir / "motor_kami" / "output"
-            output_dir.mkdir(exist_ok=True)
+            output_dir = Path(self.config.motor_kami.get('output_dir', '~/.willowlegal/output/')).expanduser()
+            output_dir.mkdir(parents=True, exist_ok=True)
             output_filename = kwargs.get("output_filename", f"{matter_id}_{template}.pdf" if matter_id else f"{template}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
             output_path = output_dir / output_filename
             
-            # Ejecutar motor
-            motor_script = self.repo_dir / "motor_kami" / "motor_kami.py"
-            cmd = [
-                sys.executable,
-                str(motor_script),
-                "--input", tmp_path,
-                "--output", str(output_path),
-                "--preview-html"
-            ]
+            # v2.0: Llamar generar_documento_real() directamente
+            from motor_kami.motor_kami import generar_documento_real
             
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120
+            result = generar_documento_real(
+                template_key=template,
+                matter_data=matter or {},
+                output_path=output_path,
+                extra_vars=kwargs.get("variables", {}),
+                despacho_data=despacho_data
             )
             
-            # Limpiar archivo temporal
-            os.unlink(tmp_path)
-            
-            if result.returncode != 0:
+            if not result.get("success"):
                 return {
                     "status": "error",
-                    "mensaje": f"❌ Motor Kami error:\n{result.stderr}"
+                    "mensaje": f"❌ Error del Motor Kami: {result.get('error', 'Desconocido')}"
                 }
+            
+            # v2.0: Registrar documento en datastore
+            doc_id = self.id_generator.generate_document_id()
+            self.datastore.insert("documentos", {
+                "id": doc_id,
+                "matter_id": matter_id,
+                "template_key": template,
+                "estado": "generado",
+                "fecha_creacion": datetime.now().isoformat(),
+                "ruta_pdf": str(output_path),
+                "ruta_editable": str(output_path.with_suffix(".html"))
+            })
             
             mensaje = (
                 f"📝 Documento generado:\n"
-                f"   Template: {template_label}\n"
+                f"   Template: {result.get('template_label', template)}\n"
                 f"   📄 {output_filename}\n"
                 f"   📁 {output_dir}"
             )
@@ -342,15 +301,17 @@ class HermesLegalCommands:
                 try:
                     from scripts.drive_manager import DriveManager
                     dm = DriveManager()
+                    cliente_nombre = matter.get("cliente", matter.get("nombre", "Cliente"))
                     drive_result = dm.upload_pdf(str(output_path), cliente_nombre)
-                    mensaje += f"\n📤 Drive: {drive_result['link']}"
+                    mensaje += f"\n📤 Drive: {drive_result.get('link', 'OK')}"
                 except Exception as e:
                     mensaje += f"\n⚠️  Drive: {e}"
             
             return {
                 "status": "ok",
                 "mensaje": mensaje,
-                "pdf_path": str(output_path)
+                "pdf_path": str(output_path),
+                "documento_id": doc_id
             }
                 
         except Exception as e:
@@ -362,7 +323,7 @@ class HermesLegalCommands:
     def listar_templates(self) -> dict:
         """Listar templates disponibles."""
         try:
-            templates_dir = self.repo_dir / "motor_kami" / "templates"
+            templates_dir = self.motor_dir / "templates"
             templates = [f.stem for f in templates_dir.glob("*.json") if f.stem != "index"]
             
             lines = ["📋 TEMPLATES DISPONIBLES:"]
@@ -387,20 +348,31 @@ class HermesLegalCommands:
     def crear_plazo(self, matter_id: str, descripcion: str, fecha: str, **kwargs) -> dict:
         """Crear plazo con alerta."""
         try:
-            alertas = self._load_json(self.alertas_file, [])
+            plazo_id = self.id_generator.generate_plazo_id()
             
-            alerta = {
-                "id": f"ALERT-{len(alertas)+1:03d}",
+            plazo = {
+                "id": plazo_id,
                 "matter_id": matter_id,
                 "descripcion": descripcion,
-                "fecha": fecha,
+                "fecha_vencimiento": fecha,
                 "tipo": kwargs.get("tipo", "plazo"),
                 "estado": "pendiente",
                 "creado": datetime.now().isoformat()
             }
             
-            alertas.append(alerta)
-            self._save_json(self.alertas_file, alertas)
+            self.datastore.insert("plazos", plazo)
+            
+            # Crear alerta asociada
+            alerta_id = self.id_generator.generate_alerta_id()
+            self.datastore.insert("alertas", {
+                "id": alerta_id,
+                "matter_id": matter_id,
+                "titulo": f"Plazo: {descripcion}",
+                "tipo": "plazo",
+                "fecha": fecha,
+                "estado": "pendiente",
+                "creado": datetime.now().isoformat()
+            })
             
             # Crear en Google Calendar
             mensaje_extra = ""
@@ -415,9 +387,10 @@ class HermesLegalCommands:
                     reminder_days=[3, 1]
                 )
                 
-                alerta["calendar_event_id"] = cal_result['id']
-                alerta["calendar_link"] = cal_result['link']
-                self._save_json(self.alertas_file, alertas)
+                self.datastore.update("plazos", "id", plazo_id, {
+                    "calendar_event_id": cal_result['id'],
+                    "calendar_link": cal_result['link']
+                })
                 
                 mensaje_extra = f"\n📅 Calendar: {cal_result['link']}"
             except Exception as e:
@@ -426,7 +399,7 @@ class HermesLegalCommands:
             return {
                 "status": "ok",
                 "mensaje": (
-                    f"📅 Plazo creado: {alerta['id']}\n"
+                    f"📅 Plazo creado: {plazo_id}\n"
                     f"   Matter: {matter_id}\n"
                     f"   📌 {descripcion}\n"
                     f"   📆 Fecha límite: {fecha}"
@@ -443,7 +416,7 @@ class HermesLegalCommands:
     def ver_alertas(self, matter_id: str = None) -> dict:
         """Ver alertas pendientes."""
         try:
-            alertas = self._load_json(self.alertas_file, [])
+            alertas = self.datastore.get("alertas")
             
             if matter_id:
                 alertas = [a for a in alertas if a.get("matter_id") == matter_id]
@@ -458,7 +431,7 @@ class HermesLegalCommands:
             
             lines = [f"📢 ALERTAS PENDIENTES ({len(pendientes)})"]
             for a in pendientes[-10:]:
-                lines.append(f"  • {a['id']}: {a['descripcion']} (vence: {a['fecha']})")
+                lines.append(f"  • {a['id']}: {a.get('titulo', a.get('descripcion', 'Sin título'))} (vence: {a['fecha']})")
             
             return {
                 "status": "ok",
@@ -478,14 +451,14 @@ class HermesLegalCommands:
     def status_despacho(self) -> dict:
         """Estado general del despacho."""
         try:
-            matters = self._load_json(self.matters_file, [])
-            alertas = self._load_json(self.alertas_file, [])
+            matters = self.datastore.get("matters")
+            alertas = self.datastore.get("alertas")
             
-            activos = [m for m in matters if m.get("estado") in ["Activo", "Intake"]]
+            activos = [m for m in matters if m.get("estado") in ["activo", "Intake"]]
             pendientes = [a for a in alertas if a.get("estado") == "pendiente"]
             
             lines = [
-                "📊 ESTADO DEL DESPACHO",
+                f"📊 ESTADO DEL DESPACHO — {self.config.despacho.nombre}",
                 "",
                 f"📁 Matters activos: {len(activos)}",
                 f"📢 Alertas pendientes: {len(pendientes)}",
@@ -495,7 +468,43 @@ class HermesLegalCommands:
             ]
             
             for m in matters[-5:]:
-                lines.append(f"   {m['id']}: {m['nombre']} ({m['estado']})")
+                lines.append(f"   {m['id']}: {m.get('nombre', m.get('cliente', 'N/A'))} ({m['estado']})")
+            
+            return {
+                "status": "ok",
+                "mensaje": "\n".join(lines),
+                "resumen": {
+                    "activos": len(activos),
+                    "pendientes": len(pendientes),
+                    "total": len(matters)
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "mensaje": f"❌ Error: {str(e)}"
+            }
+    
+    def exportar_resumen(self) -> dict:
+        """Exportar resumen a formato texto."""
+        try:
+            matters = self.datastore.get("matters")
+            finanzas = self.datastore.get("finanzas")
+            
+            movimientos = finanzas.get("movimientos", []) if isinstance(finanzas, dict) else []
+            total_ingresos = sum(m["monto"] for m in movimientos if m.get("tipo") in ["ingreso", "anticipo", "pago", "honorario"])
+            total_egresos = sum(m["monto"] for m in movimientos if m.get("tipo") in ["egreso", "gasto"])
+            
+            lines = [
+                f"📊 RESUMEN FINANCIERO — {self.config.despacho.nombre}",
+                "",
+                f"💰 Ingresos: ${total_ingresos:,.2f}",
+                f"💸 Egresos: ${total_egresos:,.2f}",
+                f"📈 Balance: ${total_ingresos - total_egresos:,.2f}",
+                "",
+                f"📁 Total matters: {len(matters)}"
+            ]
             
             return {
                 "status": "ok",
@@ -507,159 +516,3 @@ class HermesLegalCommands:
                 "status": "error",
                 "mensaje": f"❌ Error: {str(e)}"
             }
-    
-    # ============================================================
-    # FINANZAS
-    # ============================================================
-    
-    def registrar_finanza(self, matter_id: str, monto: float, concepto: str, tipo: str = "anticipo", **kwargs) -> dict:
-        """
-        Registrar un movimiento financiero.
-        
-        Args:
-            matter_id: ID del matter
-            monto: Monto en MXN
-            concepto: Descripción del movimiento
-            tipo: anticipo | honorario | factura | gasto
-            
-        Returns:
-            dict con status, finanza_id, mensaje
-        """
-        try:
-            finanzas = self._load_json(self.finanzas_file, [])
-            
-            monto_val = float(monto)
-            finanza = {
-                "id": f"FIN-{len(finanzas)+1:04d}",
-                "matter_id": matter_id,
-                "concepto": concepto,
-                "monto": monto_val,
-                "tipo": tipo,
-                "estado": kwargs.get("estado", "pendiente"),
-                "fecha": kwargs.get("fecha", datetime.now().strftime("%Y-%m-%d")),
-                "notas": kwargs.get("notas", ""),
-                "fecha_registro": datetime.now().isoformat()
-            }
-            
-            finanzas.append(finanza)
-            self._save_json(self.finanzas_file, finanzas)
-            
-            return {
-                "status": "ok",
-                "finanza_id": finanza["id"],
-                "mensaje": f"✅ {tipo.upper()} registrado: {finanza['id']} — ${monto_val:,.2f} MXN\n   Matter: {matter_id}\n   Concepto: {concepto}"
-            }
-        except Exception as e:
-            return {
-                "status": "error",
-                "mensaje": f"❌ Error registrando finanza: {str(e)}"
-            }
-    
-    def ver_finanzas(self, matter_id: str = None) -> dict:
-        """
-        Ver movimientos financieros.
-        
-        Args:
-            matter_id: (opcional) Filtrar por matter
-            
-        Returns:
-            dict con status, mensaje formateado
-        """
-        try:
-            finanzas = self._load_json(self.finanzas_file, [])
-            
-            if matter_id:
-                movimientos = [f for f in finanzas if f["matter_id"] == matter_id]
-                if not movimientos:
-                    return {
-                        "status": "ok",
-                        "mensaje": f"📊 Sin movimientos para {matter_id}"
-                    }
-                
-                total = sum(f["monto"] for f in movimientos)
-                lines = [f"💰 Finanzas: {matter_id}", "─" * 40]
-                for f in movimientos:
-                    icon = "💵" if f["tipo"] == "anticipo" else "💼" if f["tipo"] == "honorario" else "🧾" if f["tipo"] == "factura" else "💸"
-                    lines.append(f"{icon} {f['id']} | {f['tipo'].upper()} | ${f['monto']:,.2f} | {f['estado']}")
-                    lines.append(f"   {f['concepto']} ({f['fecha']})")
-                lines.append("─" * 40)
-                lines.append(f"📈 Total: ${total:,.2f} MXN")
-                
-                return {
-                    "status": "ok",
-                    "mensaje": "\n".join(lines)
-                }
-            else:
-                # Resumen global
-                if not finanzas:
-                    return {
-                        "status": "ok",
-                        "mensaje": "📊 Sin movimientos financieros registrados"
-                    }
-                
-                total = sum(f["monto"] for f in finanzas)
-                anticipos = sum(f["monto"] for f in finanzas if f["tipo"] == "anticipo")
-                honorarios = sum(f["monto"] for f in finanzas if f["tipo"] == "honorario")
-                
-                return {
-                    "status": "ok",
-                    "mensaje": (
-                        f"📊 Resumen Financiero\n"
-                        f"─" * 40 + "\n"
-                        f"💵 Anticipos: ${anticipos:,.2f}\n"
-                        f"💼 Honorarios: ${honorarios:,.2f}\n"
-                        f"📈 Total: ${total:,.2f} MXN\n"
-                        f"📝 Movimientos: {len(finanzas)}"
-                    )
-                }
-        except Exception as e:
-            return {
-                "status": "error",
-                "mensaje": f"❌ Error: {str(e)}"
-            }
-    
-    # ============================================================
-    # HELPERS PRIVADOS
-    # ============================================================
-    
-    def _load_json(self, path: Path, default):
-        """Cargar JSON o retornar default."""
-        if path.exists():
-            with open(path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return default
-    
-    def _save_json(self, path: Path, data):
-        """Guardar JSON con formato."""
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-    
-    def _safe_name(self, name: str) -> str:
-        """Convertir nombre a nombre de carpeta seguro."""
-        return "".join(c if c.isalnum() or c in " _-" else "_" for c in name).strip().replace(" ", "_")
-    
-    def _crear_carpetas_matter(self, carpeta: str):
-        """Crear estructura de carpetas para un matter."""
-        base = Path(carpeta)
-        subdirs = [
-            "01_Intake",
-            "02_Contratos/Borradores",
-            "02_Contratos/Firmados",
-            "03_Correspondencia/Entrante",
-            "03_Correspondencia/Saliente",
-            "04_Litigio",
-            "05_Facturacion",
-            "06_Entregables/Documentos_Finales",
-            "07_Archivo"
-        ]
-        for sub in subdirs:
-            (base / sub).mkdir(parents=True, exist_ok=True)
-
-
-if __name__ == "__main__":
-    # Test básico
-    cmd = HermesLegalCommands()
-    print(cmd.crear_matter("Test_Hermes_Integration"))
-    print(cmd.listar_matters())
-    print(cmd.status_despacho())

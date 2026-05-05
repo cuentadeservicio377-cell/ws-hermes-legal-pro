@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, asdict
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from weasyprint import HTML, CSS
 
 # ============================================================
