@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#1B365D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Willow Legal — Tu despacho, simplificado</title>
+    <title>Willow Legal Pro — Despacho Lic. Narváez</title>
     <link rel="stylesheet" href="css/kami.css">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B365D'/%3E%3Ctext x='16' y='22' text-anchor='middle' fill='white' font-size='18' font-weight='600' font-family='serif'%3EW%3C/text%3E%3C/svg%3E">
 </head>
@@ -16,7 +16,10 @@
         <header class="app-header">
             <div class="logo">
                 <div class="logo-icon">W</div>
-                <div class="logo-text">Willow Legal</div>
+                <div class="logo-text">
+                    <div>Willow Legal</div>
+                    <div class="logo-sub">Despacho Lic. Narváez</div>
+                </div>
             </div>
             <div class="header-actions">
                 <button class="badge-count" id="btn-alertas" onclick="App.navigate('alertas')">
@@ -31,18 +34,29 @@
             <!-- Dashboard View -->
             <div id="view-dashboard" class="view active">
                 <div id="dashboard-content">
-                    <div class="skeleton" style="height: 120px; margin-bottom: 16px;"></div>
-                    <div class="skeleton" style="height: 80px; margin-bottom: 16px;"></div>
+                    <div class="skeleton" style="height: 140px; margin-bottom: 16px;"></div>
+                    <div class="skeleton" style="height: 100px; margin-bottom: 16px;"></div>
                     <div class="skeleton" style="height: 200px;"></div>
                 </div>
             </div>
 
-            <!-- Reuniones View -->
-            <div id="view-reuniones" class="view">
-                <div id="reuniones-content">
+            <!-- Expedientes View -->
+            <div id="view-expedientes" class="view">
+                <div id="expedientes-content">
                     <div class="empty-state">
-                        <div class="icon">🎤</div>
-                        <h3>Reuniones</h3>
+                        <div class="icon">⚖️</div>
+                        <h3>Expedientes</h3>
+                        <p>Cargando...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clientes View -->
+            <div id="view-clientes" class="view">
+                <div id="clientes-content">
+                    <div class="empty-state">
+                        <div class="icon">👥</div>
+                        <h3>Clientes</h3>
                         <p>Cargando...</p>
                     </div>
                 </div>
@@ -59,17 +73,6 @@
                 </div>
             </div>
 
-            <!-- Matters View -->
-            <div id="view-matters" class="view">
-                <div id="matters-content">
-                    <div class="empty-state">
-                        <div class="icon">📁</div>
-                        <h3>Matters</h3>
-                        <p>Cargando...</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Alertas View -->
             <div id="view-alertas" class="view">
                 <div id="alertas-content">
@@ -79,6 +82,16 @@
                         <p>Cargando...</p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Detalle Expediente View -->
+            <div id="view-expediente-detalle" class="view">
+                <div id="expediente-detalle-content"></div>
+            </div>
+
+            <!-- Detalle Cliente View -->
+            <div id="view-cliente-detalle" class="view">
+                <div id="cliente-detalle-content"></div>
             </div>
         </main>
 
@@ -93,17 +106,17 @@
                 <span class="nav-icon">📊</span>
                 <span>Inicio</span>
             </a>
-            <a href="#" class="nav-item" data-view="reuniones" onclick="App.navigate('reuniones'); return false;">
-                <span class="nav-icon">🎤</span>
-                <span>Reuniones</span>
+            <a href="#" class="nav-item" data-view="expedientes" onclick="App.navigate('expedientes'); return false;">
+                <span class="nav-icon">⚖️</span>
+                <span>Expedientes</span>
+            </a>
+            <a href="#" class="nav-item" data-view="clientes" onclick="App.navigate('clientes'); return false;">
+                <span class="nav-icon">👥</span>
+                <span>Clientes</span>
             </a>
             <a href="#" class="nav-item" data-view="documentos" onclick="App.navigate('documentos'); return false;">
                 <span class="nav-icon">📄</span>
                 <span>Docs</span>
-            </a>
-            <a href="#" class="nav-item" data-view="matters" onclick="App.navigate('matters'); return false;">
-                <span class="nav-icon">📁</span>
-                <span>Matters</span>
             </a>
         </nav>
 
@@ -122,9 +135,9 @@
     <script src="js/api.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/dashboard.js"></script>
-    <script src="js/reuniones.js"></script>
+    <script src="js/expedientes.js"></script>
+    <script src="js/clientes.js"></script>
     <script src="js/documentos.js"></script>
-    <script src="js/matters.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

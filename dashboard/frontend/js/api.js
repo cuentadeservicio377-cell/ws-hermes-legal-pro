@@ -114,9 +114,30 @@ const API = {
     });
   },
   
+  // Expedientes (nuevo modelo judicial)
+  expedientes(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/expedientes${query ? '?' + query : ''}`);
+  },
+  
+  expediente(id) {
+    return this.request(`/expedientes/${id}`);
+  },
+  
+  // Clientes
+  clientes(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/clientes${query ? '?' + query : ''}`);
+  },
+  
+  cliente(id) {
+    return this.request(`/clientes/${id}`);
+  },
+  
   // Alertas
-  alertas() {
-    return this.request('/alertas');
+  alertas(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/alertas${query ? '?' + query : ''}`);
   },
   
   // Plazos

@@ -1,9 +1,10 @@
 // js/app.js — Router, navegación táctil, y coordinación de vistas
-// Willow Legal Pro v3.0 — Mobile-first SPA
+// Willow Legal Pro v3.1 — Despacho Judicial Mexicano (Lic. Narváez)
 
 const App = {
   currentView: 'dashboard',
   modalOpen: false,
+  previousView: null,
   
   // Inicialización
   init() {
@@ -17,13 +18,18 @@ const App = {
     this.updateAlertBadge();
     setInterval(() => this.updateAlertBadge(), 30000);
     
-    console.log('✅ Willow Legal Pro v3.0 iniciado');
+    console.log('✅ Willow Legal Pro v3.1 — Despacho Lic. Narváez iniciado');
   },
   
   // Navegación entre vistas
-  navigate(view, pushState = true) {
+  navigate(view, pushState = true, data = null) {
     if (this.modalOpen) {
       this.closeModal();
+    }
+    
+    // Guardar vista anterior para volver
+    if (view !== this.currentView && !view.startsWith('expediente-') && !view.startsWith('cliente-')) {
+      this.previousView = this.currentView;
     }
     
     // Ocultar todas las vistas
@@ -38,44 +44,65 @@ const App = {
       this.currentView = view;
     }
     
-    // Actualizar navegación inferior
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.view === view);
-    });
+    // Actualizar navegación inferior (solo para vistas principales)
+    if (!view.startsWith('expediente-') && !view.startsWith('cliente-')) {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.view === view);
+      });
+    }
     
     // Actualizar FAB según vista
     this.updateFab();
     
     // Renderizar contenido específico
-    this.renderView(view);
+    this.renderView(view, data);
     
     // Scroll al top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Push state para navegación del browser
     if (pushState && window.history) {
-      window.history.pushState({ view }, '', `#${view}`);
+      window.history.pushState({ view, data }, '', `#${view}`);
     }
   },
   
   // Renderizar contenido de cada vista
-  async renderView(view) {
+  async renderView(view, data = null) {
     switch(view) {
       case 'dashboard':
         await Dashboard.render();
         break;
-      case 'reuniones':
-        await Reuniones.render();
+      case 'expedientes':
+        await Expedientes.render();
+        break;
+      case 'clientes':
+        await Clientes.render();
         break;
       case 'documentos':
         await Documentos.render();
         break;
-      case 'matters':
-        await Matters.render();
-        break;
       case 'alertas':
         await Dashboard.renderAlertas();
         break;
+      case 'expediente-detalle':
+        if (data && data.expedienteId) {
+          await Expedientes.renderDetalle(data.expedienteId);
+        }
+        break;
+      case 'cliente-detalle':
+        if (data && data.clienteId) {
+          await Clientes.renderDetalle(data.clienteId);
+        }
+        break;
+    }
+  },
+  
+  // Volver a la vista anterior
+  goBack() {
+    if (this.previousView) {
+      this.navigate(this.previousView);
+    } else {
+      this.navigate('dashboard');
     }
   },
   
@@ -83,11 +110,13 @@ const App = {
   updateFab() {
     const fab = document.getElementById('fab-action');
     const views = {
-      'dashboard': { icon: '+', action: () => this.showNewReunionModal() },
-      'reuniones': { icon: '+', action: () => Reuniones.showCreateModal() },
+      'dashboard': { icon: '+', action: () => this.showNewExpedienteModal() },
+      'expedientes': { icon: '+', action: () => Expedientes.showCreateModal() },
+      'clientes': { icon: '+', action: () => Clientes.showCreateModal() },
       'documentos': { icon: '+', action: () => Documentos.showCreateModal() },
-      'matters': { icon: '+', action: () => Matters.showCreateModal() },
-      'alertas': { icon: '✓', action: () => Dashboard.markAllRead() }
+      'alertas': { icon: '✓', action: () => Dashboard.markAllRead() },
+      'expediente-detalle': { icon: '✎', action: () => Expedientes.showEditModal() },
+      'cliente-detalle': { icon: '✎', action: () => Clientes.showEditModal() }
     };
     
     const config = views[this.currentView] || views['dashboard'];
@@ -151,7 +180,7 @@ const App = {
   async updateAlertBadge() {
     try {
       const alertas = await API.alertas();
-      const count = alertas ? alertas.filter(a => !a.resuelta).length : 0;
+      const count = alertas ? alertas.filter(a => a.estado === 'pendiente').length : 0;
       const badge = document.getElementById('alert-badge');
       badge.textContent = count;
       badge.style.display = count > 0 ? 'flex' : 'none';
@@ -177,7 +206,7 @@ const App = {
     // Back button del browser
     window.addEventListener('popstate', (e) => {
       if (e.state && e.state.view) {
-        this.navigate(e.state.view, false);
+        this.navigate(e.state.view, false, e.state.data);
       }
     });
   },
@@ -187,7 +216,7 @@ const App = {
     const diff = touchStartX - touchEndX;
     
     if (Math.abs(diff) > swipeThreshold) {
-      const views = ['dashboard', 'reuniones', 'documentos', 'matters'];
+      const views = ['dashboard', 'expedientes', 'clientes', 'documentos'];
       const currentIndex = views.indexOf(this.currentView);
       
       if (diff > 0 && currentIndex < views.length - 1) {
@@ -200,9 +229,9 @@ const App = {
     }
   },
   
-  // Nueva reunión desde dashboard
-  showNewReunionModal() {
-    Reuniones.showCreateModal();
+  // Nuevo expediente desde dashboard
+  showNewExpedienteModal() {
+    Expedientes.showCreateModal();
   }
 };
 
