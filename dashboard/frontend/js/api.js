@@ -1,75 +1,138 @@
-// js/api.js — Cliente HTTP para Hermes Legal Pro API v8
+// js/api.js — Capa de API para backend
+// Willow Legal Pro v3.0
+
 const API = {
-  baseUrl: '/api',
+  baseUrl: '', // Same origin
   
-  async get(endpoint) {
-    const res = await fetch(`http://localhost:8082${this.baseUrl}${endpoint}`);
-    if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-    return res.json();
+  async request(endpoint, options = {}) {
+    const url = `${this.baseUrl}/api${endpoint}`;
+    
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      ...options
+    };
+    
+    if (config.body && typeof config.body === 'object') {
+      config.body = JSON.stringify(config.body);
+    }
+    
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || `HTTP ${response.status}`);
+      }
+      
+      // Handle empty responses
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+      
+    } catch (err) {
+      console.error(`API Error ${endpoint}:`, err);
+      throw err;
+    }
   },
   
-  async post(endpoint, data) {
-    const res = await fetch(`http://localhost:8082${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-    return res.json();
+  // Dashboard
+  dashboard() {
+    return this.request('/dashboard');
   },
   
-  async put(endpoint, data) {
-    const res = await fetch(`http://localhost:8082${this.baseUrl}${endpoint}`, {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-    return res.json();
-  },
-  
-  async delete(endpoint) {
-    const res = await fetch(`http://localhost:8082${this.baseUrl}${endpoint}`, {method: 'DELETE'});
-    if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-    return res.json();
+  // Health check
+  health() {
+    return this.request('/health');
   },
   
   // Matters
-  getMatters() { return this.get('/matters'); },
-  createMatter(data) { return this.post('/matters', data); },
-  updateMatter(id, data) { return this.put(`/matters/${id}`, data); },
-  deleteMatter(id) { return this.delete(`/matters/${id}`); },
+  matters() {
+    return this.request('/matters');
+  },
+  
+  matter(id) {
+    return this.request(`/matters/${id}`);
+  },
+  
+  crearMatter(data) {
+    return this.request('/matters', {
+      method: 'POST',
+      body: data
+    });
+  },
+  
+  // Reuniones
+  reuniones() {
+    return this.request('/reuniones');
+  },
+  
+  crearReunion(data) {
+    return this.request('/reuniones', {
+      method: 'POST',
+      body: data
+    });
+  },
+  
+  eliminarReunion(id) {
+    return this.request(`/reuniones/${id}`, {
+      method: 'DELETE'
+    });
+  },
   
   // Documentos
-  getTemplates() { return this.get('/templates'); },
-  generateDocument(templateId, matterId) { 
-    return this.post(`/matter/${matterId}/generar-documento`, {template_key: templateId}); 
+  documentos() {
+    return this.request('/documentos');
+  },
+  
+  crearDocumento(data) {
+    return this.request('/documentos', {
+      method: 'POST',
+      body: data
+    });
+  },
+  
+  // Templates
+  templates() {
+    return this.request('/templates');
+  },
+  
+  template(key) {
+    return this.request(`/templates/${key}`);
+  },
+  
+  // Finanzas
+  finanzas() {
+    return this.request('/finanzas');
+  },
+  
+  crearMovimiento(data) {
+    return this.request('/finanzas', {
+      method: 'POST',
+      body: data
+    });
+  },
+  
+  // Alertas
+  alertas() {
+    return this.request('/alertas');
   },
   
   // Plazos
-  getPlazos() { return this.get('/plazos'); },
-  createPlazo(data) { return this.post('/plazo', data); },
+  plazos() {
+    return this.request('/plazos');
+  },
   
-  // Finanzas
-  getFinanzas() { return this.get('/finanzas'); },
-  createFinanza(data) { return this.post('/finanzas', data); },
+  // Check plazos
+  checkPlazos() {
+    return this.request('/check-plazos', {
+      method: 'POST'
+    });
+  },
   
-  // Alertas
-  getAlertas() { return this.get('/alertas'); },
-  
-  // Aprobaciones
-  getAprobaciones() { return this.get('/aprobaciones'); },
-  approveDocument(id) { return this.post(`/aprobacion/${id}/aprobar`); },
-  
-  // NUEVO v8 — Google Workspace
-  getDriveLink(matterId) { return this.get(`/drive-link/${matterId}`); },
-  exportToSheets(data = {}) { return this.post('/export-sheets', data); },
-  exportToDocs(data = {}) { return this.post('/export-docs', data); },
-  syncExcel() { return this.post('/sync-excel'); },
-  getTasks() { return this.get('/tasks'); },
-  createTask(data) { return this.post('/task', data); },
-  getCalendarEvents() { return this.get('/calendar-events'); },
-  checkPlazos() { return this.post('/check-plazos'); }
+  // Drive
+  driveLink(matterId) {
+    return this.request(`/drive-link/${matterId}`);
+  }
 };
-
-window.API = API;

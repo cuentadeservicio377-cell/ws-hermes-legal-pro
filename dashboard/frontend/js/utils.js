@@ -1,81 +1,105 @@
-// js/utils.js — Helpers de formateo
+// js/utils.js — Utilidades compartidas
+// Willow Legal Pro v3.0
 
 const Utils = {
-    // Fecha: "2026-05-15" → "15 de mayo de 2026"
-    formatDate(dateStr) {
-        if (!dateStr) return 'Sin fecha';
-        const d = new Date(dateStr + 'T00:00:00');
-        return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
-    },
-
-    // Fecha corta: "2026-05-15" → "15 may"
-    formatDateShort(dateStr) {
-        if (!dateStr) return '—';
-        const d = new Date(dateStr + 'T00:00:00');
-        return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-    },
-
-    // Días restantes: calcula desde hoy
-    diasRestantes(dateStr) {
-        if (!dateStr) return null;
-        const hoy = new Date();
-        hoy.setHours(0,0,0,0);
-        const fecha = new Date(dateStr + 'T00:00:00');
-        const diff = Math.floor((fecha - hoy) / (1000 * 60 * 60 * 24));
-        return diff;
-    },
-
-    // Color según días restantes
-    colorUrgencia(dias) {
-        if (dias === null) return 'gray';
-        if (dias < 0) return 'red';      // Vencido
-        if (dias <= 3) return 'red';     // Crítico
-        if (dias <= 7) return 'yellow';  // Próximo
-        return 'green';                  // Tranquilo
-    },
-
-    // Badge HTML según urgencia
-    badgeUrgencia(dias) {
-        const color = this.colorUrgencia(dias);
-        const text = dias === null ? 'SIN PLAZO' : 
-                     dias < 0 ? `VENCIDO ${Math.abs(dias)} días` :
-                     dias === 0 ? 'HOY' :
-                     dias === 1 ? '1 día' :
-                     `${dias} días`;
-        return `<span class="badge badge-${color}">${text}</span>`;
-    },
-
-    // Moneda: 150000 → "$150,000 MXN"
-    formatMoney(amount) {
-        if (!amount && amount !== 0) return 'Por definir';
-        return '$' + amount.toLocaleString('es-MX') + ' MXN';
-    },
-
-    // Prioridad: "alta" → "ALTA" con color
-    badgePrioridad(p) {
-        const map = { alta: 'red', media: 'yellow', baja: 'green' };
-        const color = map[p] || 'gray';
-        return `<span class="badge badge-${color}">${(p || 'MEDIA').toUpperCase()}</span>`;
-    },
-
-    // Estado: "activo" → "ACTIVO"
-    badgeEstado(e) {
-        const map = { activo: 'green', cerrado: 'gray', urgente: 'red' };
-        const color = map[e] || 'gray';
-        return `<span class="badge badge-${color}">${(e || 'ACTIVO').toUpperCase()}</span>`;
-    },
-
-    // Escapar HTML para evitar XSS
-    escape(html) {
-        const div = document.createElement('div');
-        div.textContent = html;
-        return div.innerHTML;
-    },
-
-    // Spinner de carga
-    spinner() {
-        return '<div class="spinner"></div>';
+  escape(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  },
+  
+  formatDate(dateStr) {
+    if (!dateStr) return 'Sin fecha';
+    try {
+      const date = new Date(dateStr);
+      const hoy = new Date();
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+      
+      // Comparar solo fechas
+      const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const hoyOnly = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      const mananaOnly = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate());
+      
+      if (dateOnly.getTime() === hoyOnly.getTime()) {
+        return 'Hoy';
+      } else if (dateOnly.getTime() === mananaOnly.getTime()) {
+        return 'Mañana';
+      } else {
+        return date.toLocaleDateString('es-MX', { 
+          weekday: 'short', 
+          day: 'numeric', 
+          month: 'short' 
+        });
+      }
+    } catch (e) {
+      return dateStr;
     }
+  },
+  
+  formatDateShort(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    } catch (e) {
+      return dateStr;
+    }
+  },
+  
+  formatDateFull(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('es-MX', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  },
+  
+  diasRestantes(dateStr) {
+    if (!dateStr) return null;
+    try {
+      const fecha = new Date(dateStr);
+      const hoy = new Date();
+      const diff = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24));
+      return diff;
+    } catch (e) {
+      return null;
+    }
+  },
+  
+  colorUrgencia(dias) {
+    if (dias === null) return 'gray';
+    if (dias < 0) return 'red';
+    if (dias <= 2) return 'orange';
+    if (dias <= 7) return 'yellow';
+    return 'green';
+  },
+  
+  formatMoney(amount) {
+    if (amount === undefined || amount === null) return '$0.00';
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN'
+    }).format(amount);
+  },
+  
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 };
-
-window.Utils = Utils;
