@@ -470,6 +470,107 @@ def render_tabla(tabla: dict) -> str:
 # ============================================================
 # API PÚBLICA
 # ============================================================
+# API PÚBLICA v4 — Lectura de templates reales
+# ============================================================
+
+def generar_documento_real(
+    template_key: str,
+    matter_data: Dict[str, Any],
+    output_path: Path,
+    extra_vars: Optional[Dict[str, Any]] = None,
+    despacho_data: Optional[Dict[str, str]] = None
+) -> Dict[str, Any]:
+    """Genera documento usando template real con Motor Kami blocks."""
+    from template_engine import Template
+    from variable_resolver import VariableResolver
+    
+    # 1. Cargar template
+    try:
+        template = Template.load(TEMPLATES_DIR, template_key)
+    except FileNotFoundError as e:
+        return {"success": False, "error": str(e)}
+    
+    # 2. Preparar variables
+    all_vars = {**(extra_vars or {}), **matter_data}
+    if despacho_data:
+        all_vars["prestador"] = despacho_data
+    
+    # 3. Validar
+    missing = template.validate_variables(all_vars)
+    if missing:
+        return {
+            "success": False,
+            "error": f"Variables faltantes: {', '.join(missing)}",
+            "missing_variables": missing
+        }
+    
+    # 4. Resolver variables en template
+    resolver = VariableResolver(despacho_data or {}, matter_data)
+    doc_data = resolver.resolve_dict(template.document_data_template)
+    
+    # 5. Generar HTML usando blocks.py
+    from blocks import generar_desde_bloques
+    
+    blocks = []
+    for block_type in template.recommended_blocks:
+        if block_type == "header_brand":
+            blocks.append({
+                "type": "header_brand",
+                "data": {
+                    "marca": doc_data.get("prestador", {}).get("nombre", ""),
+                    "numero_doc": doc_data.get("numero_contrato", ""),
+                    "fecha": doc_data.get("fecha", "")
+                }
+            })
+        elif block_type == "cover_page":
+            blocks.append({
+                "type": "cover_page",
+                "data": {
+                    "titulo": doc_data.get("titulo", "Documento Legal"),
+                    "marca": doc_data.get("prestador", {}).get("nombre", ""),
+                    "numero": doc_data.get("numero_contrato", "")
+                }
+            })
+        elif block_type == "parties_block":
+            blocks.append({
+                "type": "parties_block",
+                "data": {
+                    "prestador": doc_data.get("prestador", {}),
+                    "cliente": doc_data.get("cliente", {})
+                }
+            })
+        elif block_type == "clause_section":
+            for clausula in doc_data.get("clausulas", []):
+                blocks.append({"type": "clause_section", "data": clausula})
+        elif block_type == "signature_block":
+            blocks.append({
+                "type": "signature_block",
+                "data": doc_data.get("signature_block", {})
+            })
+        elif block_type == "footer_block":
+            blocks.append({
+                "type": "footer_block",
+                "data": doc_data.get("footer", {})
+            })
+    
+    # 6. Generar via blocks.py
+    try:
+        html_path = str(output_path.with_suffix(".html"))
+        generar_desde_bloques(
+            blocks,
+            str(output_path),
+            options={"titulo": doc_data.get("titulo", template.label)},
+            document_data=doc_data
+        )
+        return {
+            "success": True,
+            "file_path": str(output_path),
+            "file_size": output_path.stat().st_size,
+            "template_used": template_key,
+            "template_label": template.label
+        }
+    except Exception as e:
+        return {"success": False, "error": f"Error generando PDF: {str(e)}"}
 
 def generar_documento(data: dict, output_path: Path) -> Path:
     """Genera un documento PDF usando el Motor Kami."""

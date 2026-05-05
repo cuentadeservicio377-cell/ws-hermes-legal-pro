@@ -18,40 +18,38 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+# v2.0: Importacion anticipada de core (se inicializa despues de paths)
+from config.config_loader import Config
+from core.datastore import JSONDatastore
+from core.id_generator import IDGenerator
+
 # ── Paths ─────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "datos"
 
-# Detectar motor_kami (puede estar en repo raíz o en dashboard/)
+# Detectar motor_kami (puede estar en repo raiz o en dashboard/)
 MOTOR_DIR = BASE_DIR / "motor_kami"
 if not (MOTOR_DIR / "motor_kami.py").exists():
-    # Si no está en BASE_DIR, probar subiendo un nivel (caso ejecución desde raíz)
     MOTOR_DIR = BASE_DIR.parent / "motor_kami"
+
+# Anadir motor al path para importar
+sys.path.insert(0, str(MOTOR_DIR))
+
+# Anadir raiz del proyecto al path para imports de core y config
+PROJECT_ROOT = BASE_DIR.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+# === v2.0: Configuracion centralizada + Datastore unificado ===
+config = Config.load()
+datastore = JSONDatastore(config.datastore.path, config.datastore.backup_dir)
+id_generator = IDGenerator(datastore, config.ids)
 
 CLIENTES_DIR = Path.home() / "WillowLegal" / "01_Clientes"
 PLANTILLAS_DIR = Path.home() / "WillowLegal" / "02_Administracion" / "Plantillas"
 
-# Añadir motor al path para importar
-sys.path.insert(0, str(MOTOR_DIR))
-
 # Crear dirs si no existen
-for d in [DATA_DIR, CLIENTES_DIR, PLANTILLAS_DIR]:
+for d in [CLIENTES_DIR, PLANTILLAS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
-
-# Archivos JSON
-MATTERS_FILE = DATA_DIR / "matters.json"
-REUNIONES_FILE = DATA_DIR / "reuniones.json"
-ALERTAS_FILE = DATA_DIR / "alertas.json"
-DOCUMENTOS_FILE = DATA_DIR / "documentos.json"
-FINANZAS_FILE = DATA_DIR / "finanzas.json"
-PLAZOS_FILE = DATA_DIR / "plazos.json"
-APROBACIONES_FILE = DATA_DIR / "aprobaciones.json"
-
-# Inicializar JSON si no existen
-for f in [MATTERS_FILE, REUNIONES_FILE, ALERTAS_FILE, DOCUMENTOS_FILE, FINANZAS_FILE, PLAZOS_FILE, APROBACIONES_FILE]:
-    if not f.exists():
-        with open(f, "w", encoding="utf-8") as fh:
-            json.dump([], fh)
 
 app = FastAPI(
     title="Hermes Legal Pro — Dashboard API",
@@ -69,16 +67,20 @@ app.add_middleware(
 # ── Cache ─────────────────────────────────────────────────────
 _CACHE: Dict[str, Any] = {}
 
-def load_json(path: Path) -> Any:
+def load_json(collection: str) -> Any:
+    # v2.0: Usa datastore en lugar de paths hardcodeados
+    return datastore.get(collection)
+
+def save_json(collection: str, data: Any):
+    # v2.0: Usa datastore en lugar de paths hardcodeados
+    datastore.set(collection, data)
+
+def load_json_legacy(path: Path) -> Any:
+    # Fallback para cargas de archivos fisicos
     if str(path) not in _CACHE:
         with open(path, "r", encoding="utf-8") as f:
             _CACHE[str(path)] = json.load(f)
     return _CACHE[str(path)]
-
-def save_json(path: Path, data: Any):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    _CACHE[str(path)] = data
 
 def invalidate(path: Path):
     _CACHE.pop(str(path), None)
@@ -113,28 +115,39 @@ class GenerarDocumentoRequest(BaseModel):
     output_filename: Optional[str] = None
     datos_extra: Optional[Dict[str, Any]] = {}
 
+class FinanzaInput(BaseModel):
+    matter_id: str
+    tipo: str  # ingreso | egreso | anticipo | honorario
+    monto: float
+    concepto: str
+    fecha: Optional[str] = None
+    metodo_pago: Optional[str] = "transferencia"
+    notas: Optional[str] = ""
+
 # ── Endpoints ───────────────────────────────────────────────
 
 @app.get("/api/health")
 def health():
-    motor_ok = (MOTOR_DIR / "motor_kami.py").exists()
-    templates_count = len(list((MOTOR_DIR / "templates").glob("*.json"))) if (MOTOR_DIR / "templates").exists() else 0
+    templates_dir = Path(config.motor_kami['templates_dir'])
+    motor_ok = templates_dir.exists() and (templates_dir / "index.json").exists()
+    templates_count = len(list(templates_dir.glob("*.json"))) if templates_dir.exists() else 0
     return {
         "status": "ok",
         "producto": "Hermes Legal Pro",
         "version": "2.0.0",
         "motor_kami": "ok" if motor_ok else "no_encontrado",
-        "templates_disponibles": templates_count
+        "templates_disponibles": templates_count,
+        "datastore": str(config.datastore.path)
     }
 
 # ── Dashboard ───────────────────────────────────────────────
 @app.get("/api/dashboard")
 def dashboard():
     """KPIs y resumen para el dashboard principal"""
-    matters = load_json(MATTERS_FILE)
-    reuniones = load_json(REUNIONES_FILE)
-    alertas = load_json(ALERTAS_FILE)
-    documentos = load_json(DOCUMENTOS_FILE)
+    matters = load_json("matters")
+    reuniones = load_json("reuniones")
+    alertas = load_json("alertas")
+    documentos = load_json("documentos")
     
     hoy = date.today().isoformat()
     
@@ -174,7 +187,7 @@ def dashboard():
 # ── Matters ───────────────────────────────────────────────
 @app.get("/api/matters")
 def list_matters(estado: Optional[str] = None, area: Optional[str] = None):
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     if estado:
         matters = [m for m in matters if m.get("estado") == estado]
     if area:
@@ -183,9 +196,9 @@ def list_matters(estado: Optional[str] = None, area: Optional[str] = None):
 
 @app.post("/api/matters")
 def create_matter(data: MatterInput):
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     
-    nuevo_id = f"LEG-{len(matters)+1:03d}"
+    nuevo_id = id_generator.generate_matter_id()
     matter = {
         "id": nuevo_id,
         "cliente": data.cliente,
@@ -202,7 +215,7 @@ def create_matter(data: MatterInput):
         "carpeta": str(CLIENTES_DIR / safe_filename(data.cliente))
     }
     matters.append(matter)
-    save_json(MATTERS_FILE, matters)
+    save_json("matters", matters)
     
     crear_carpeta_cliente(data.cliente)
     
@@ -210,7 +223,7 @@ def create_matter(data: MatterInput):
 
 @app.get("/api/matters/{matter_id}")
 def get_matter(matter_id: str):
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     for m in matters:
         if m.get("id") == matter_id:
             return m
@@ -218,7 +231,7 @@ def get_matter(matter_id: str):
 
 @app.put("/api/matters/{matter_id}")
 def update_matter(matter_id: str, data: MatterInput):
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     for m in matters:
         if m.get("id") == matter_id:
             m["cliente"] = data.cliente
@@ -228,31 +241,31 @@ def update_matter(matter_id: str, data: MatterInput):
             m["prioridad"] = data.prioridad
             if hasattr(data, 'estado') and data.estado:
                 m["estado"] = data.estado
-            save_json(MATTERS_FILE, matters)
+            save_json("matters", matters)
             return m
     raise HTTPException(status_code=404, detail="Matter no encontrado")
 
 @app.delete("/api/matters/{matter_id}")
 def delete_matter(matter_id: str):
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     original_len = len(matters)
     matters = [m for m in matters if m.get("id") != matter_id]
     if len(matters) == original_len:
         raise HTTPException(status_code=404, detail="Matter no encontrado")
-    save_json(MATTERS_FILE, matters)
+    save_json("matters", matters)
     return {"success": True, "message": f"Matter {matter_id} eliminado"}
 
 # ── Reuniones ─────────────────────────────────────────────
 @app.get("/api/reuniones")
 def list_reuniones(matter_id: Optional[str] = None):
-    reuniones = load_json(REUNIONES_FILE)
+    reuniones = load_json("reuniones")
     if matter_id:
         reuniones = [r for r in reuniones if r.get("matter_id") == matter_id]
     return reuniones[::-1]
 
 @app.post("/api/reuniones")
 def create_reunion(data: ReunionInput):
-    reuniones = load_json(REUNIONES_FILE)
+    reuniones = load_json("reuniones")
     
     reunion = {
         "id": f"REU-{len(reuniones)+1:04d}",
@@ -269,10 +282,10 @@ def create_reunion(data: ReunionInput):
         "fecha_registro": datetime.now().isoformat()
     }
     reuniones.append(reunion)
-    save_json(REUNIONES_FILE, reuniones)
+    save_json("reuniones", reuniones)
     
     if data.matter_id:
-        matters = load_json(MATTERS_FILE)
+        matters = load_json("matters")
         for m in matters:
             if m.get("id") == data.matter_id:
                 if "reuniones" not in m:
@@ -280,13 +293,13 @@ def create_reunion(data: ReunionInput):
                 m["reuniones"].append(reunion["id"])
                 m["next_step"] = f"Revisar documentos post-reunión {reunion['id']}"
                 break
-        save_json(MATTERS_FILE, matters)
+        save_json("matters", matters)
     
     return reunion
 
 @app.get("/api/reuniones/{reunion_id}")
 def get_reunion(reunion_id: str):
-    reuniones = load_json(REUNIONES_FILE)
+    reuniones = load_json("reuniones")
     for r in reuniones:
         if r.get("id") == reunion_id:
             return r
@@ -295,7 +308,7 @@ def get_reunion(reunion_id: str):
 # ── Documentos ────────────────────────────────────────────
 @app.get("/api/documentos")
 def list_documentos(matter_id: Optional[str] = None, estado: Optional[str] = None):
-    documentos = load_json(DOCUMENTOS_FILE)
+    documentos = load_json("documentos")
     if matter_id:
         documentos = [d for d in documentos if d.get("matter_id") == matter_id]
     if estado:
@@ -304,7 +317,7 @@ def list_documentos(matter_id: Optional[str] = None, estado: Optional[str] = Non
 
 @app.post("/api/documentos")
 def create_documento(data: DocumentoInput):
-    documentos = load_json(DOCUMENTOS_FILE)
+    documentos = load_json("documentos")
     
     doc = {
         "id": f"DOC-{len(documentos)+1:04d}",
@@ -317,13 +330,13 @@ def create_documento(data: DocumentoInput):
         "ruta_editable": None
     }
     documentos.append(doc)
-    save_json(DOCUMENTOS_FILE, documentos)
+    save_json("documentos", documentos)
     
     return doc
 
 @app.get("/api/documentos/{doc_id}")
 def get_documento(doc_id: str):
-    documentos = load_json(DOCUMENTOS_FILE)
+    documentos = load_json("documentos")
     for d in documentos:
         if d.get("id") == doc_id:
             return d
@@ -333,7 +346,7 @@ def get_documento(doc_id: str):
 def aprobar_documento(doc_id: str, payload: dict):
     """Aprobar documento con trazabilidad."""
     try:
-        documentos = load_json(DOCUMENTOS_FILE)
+        documentos = load_json("documentos")
         doc = next((d for d in documentos if d["id"] == doc_id), None)
         
         if not doc:
@@ -344,7 +357,7 @@ def aprobar_documento(doc_id: str, payload: dict):
         doc["fecha_aprobacion"] = datetime.now().isoformat()
         doc["comentario_aprobacion"] = payload.get("comentario", "")
         
-        save_json(DOCUMENTOS_FILE, documentos)
+        save_json("documentos", documentos)
         
         return {
             "status": "ok",
@@ -360,7 +373,7 @@ def aprobar_documento(doc_id: str, payload: dict):
 def rechazar_documento(doc_id: str, payload: dict):
     """Rechazar documento."""
     try:
-        documentos = load_json(DOCUMENTOS_FILE)
+        documentos = load_json("documentos")
         doc = next((d for d in documentos if d["id"] == doc_id), None)
         
         if not doc:
@@ -371,7 +384,7 @@ def rechazar_documento(doc_id: str, payload: dict):
         doc["fecha_rechazo"] = datetime.now().isoformat()
         doc["motivo_rechazo"] = payload.get("motivo", "")
         
-        save_json(DOCUMENTOS_FILE, documentos)
+        save_json("documentos", documentos)
         
         return {
             "status": "ok",
@@ -424,7 +437,7 @@ def get_template(key: str):
 @app.post("/api/matter/{matter_id}/generar-documento")
 def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
     """Genera un documento PDF usando Motor Kami v3"""
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     matter = None
     for m in matters:
         if m.get("id") == matter_id:
@@ -468,7 +481,7 @@ def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
             raise HTTPException(status_code=500, detail=f"Error Motor Kami: {result.stderr}")
         
         # Actualizar documentos del matter
-        documentos = load_json(DOCUMENTOS_FILE)
+        documentos = load_json("documentos")
         doc = {
             "id": f"DOC-{len(documentos)+1:04d}",
             "matter_id": matter_id,
@@ -479,7 +492,7 @@ def generar_documento(matter_id: str, req: GenerarDocumentoRequest):
             "ruta_editable": str(output_path.with_suffix(".html"))
         }
         documentos.append(doc)
-        save_json(DOCUMENTOS_FILE, documentos)
+        save_json("documentos", documentos)
         
         return {
             "success": True,
@@ -506,7 +519,7 @@ def validate_document(data: Dict[str, Any]):
 # ── Carpetas / Explorador ─────────────────────────────────
 @app.get("/api/carpetas/{matter_id}")
 def list_carpeta(matter_id: str):
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     matter = None
     for m in matters:
         if m.get("id") == matter_id:
@@ -536,17 +549,17 @@ def list_carpeta(matter_id: str):
 # ── Alertas ────────────────────────────────────────────────
 @app.get("/api/alertas")
 def list_alertas(resueltas: bool = False):
-    alertas = load_json(ALERTAS_FILE)
+    alertas = load_json("alertas")
     if not resueltas:
         alertas = [a for a in alertas if not a.get("resuelta")]
     return alertas[::-1]
 
 # ── Finanzas ───────────────────────────────────────────────
 @app.get("/api/finanzas")
-def listar_finanzas(matter_id: str = None):
+def listar_finanzas(matter_id: Optional[str] = None):
     """Listar movimientos financieros."""
     try:
-        finanzas = load_json(FINANZAS_FILE)
+        finanzas = load_json("finanzas")
         # Adapt to expected format: dict with "movimientos" key or flat list
         if isinstance(finanzas, dict):
             movimientos = finanzas.get("movimientos", [])
@@ -556,51 +569,59 @@ def listar_finanzas(matter_id: str = None):
         if matter_id:
             movimientos = [m for m in movimientos if m.get("matter_id") == matter_id]
         
+        # Calcular resumen en tiempo real
+        total_ingresos = sum(m["monto"] for m in movimientos if m.get("tipo") in ["ingreso", "anticipo", "pago", "honorario"])
+        total_egresos = sum(m["monto"] for m in movimientos if m.get("tipo") in ["egreso", "gasto"])
+        
         return {
             "status": "ok",
-            "movimientos": movimientos[-50:],
-            "resumen": finanzas.get("resumen", {}) if isinstance(finanzas, dict) else {}
+            "movimientos": movimientos[::-1],
+            "resumen": {
+                "total_ingresos": total_ingresos,
+                "total_egresos": total_egresos,
+                "balance": total_ingresos - total_egresos,
+                "count": len(movimientos)
+            }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/finanzas")
-def crear_movimiento(payload: dict):
+def crear_movimiento(data: FinanzaInput):
     """Registrar movimiento financiero."""
     try:
-        finanzas = load_json(FINANZAS_FILE)
+        finanzas = load_json("finanzas")
         if isinstance(finanzas, dict):
             movimientos = finanzas.get("movimientos", [])
         else:
             movimientos = finanzas
-            finanzas = {"version": "1.0", "movimientos": movimientos, "resumen": {}}
+            finanzas = {"version": "2.0", "movimientos": movimientos, "resumen": {}}
         
         movimiento = {
-            "id": f"FIN-{len(movimientos)+1:03d}",
-            "matter_id": payload.get("matter_id"),
-            "concepto": payload.get("concepto", ""),
-            "monto": float(payload.get("monto", 0)),
-            "tipo": payload.get("tipo", "anticipo"),
-            "estado": payload.get("estado", "pendiente"),
-            "fecha": payload.get("fecha", datetime.now().isoformat()),
-            "notas": payload.get("notas", "")
+            "id": f"FIN-{len(movimientos)+1:04d}",
+            "matter_id": data.matter_id,
+            "concepto": data.concepto,
+            "monto": data.monto,
+            "tipo": data.tipo,
+            "metodo_pago": data.metodo_pago,
+            "fecha": data.fecha or datetime.now().isoformat(),
+            "notas": data.notas,
+            "creado": datetime.now().isoformat()
         }
         
         movimientos.append(movimiento)
         finanzas["movimientos"] = movimientos
         
-        # Recalcular resumen
+        # Recalcular resumen (v2.0 format)
         movs = finanzas["movimientos"]
         finanzas["resumen"] = {
-            "total_anticipos": sum(m["monto"] for m in movs if m["tipo"] == "anticipo"),
-            "total_honorarios": sum(m["monto"] for m in movs if m["tipo"] == "honorario"),
-            "total_facturado": sum(m["monto"] for m in movs if m["tipo"] == "factura"),
-            "total_cobrado": sum(m["monto"] for m in movs if m["estado"] == "cobrado"),
-            "total_pendiente": sum(m["monto"] for m in movs if m["estado"] == "pendiente"),
+            "total_ingresos": sum(m["monto"] for m in movs if m.get("tipo") in ["ingreso", "anticipo", "pago", "honorario"]),
+            "total_egresos": sum(m["monto"] for m in movs if m.get("tipo") in ["egreso", "gasto"]),
+            "balance": sum(m["monto"] for m in movs if m.get("tipo") in ["ingreso", "anticipo", "pago", "honorario"]) - sum(m["monto"] for m in movs if m.get("tipo") in ["egreso", "gasto"]),
             "count": len(movs)
         }
         
-        save_json(FINANZAS_FILE, finanzas)
+        save_json("finanzas", finanzas)
         
         return {
             "status": "ok",
@@ -615,7 +636,7 @@ def crear_movimiento(payload: dict):
 def list_plazos():
     """Lista todos los plazos activos."""
     try:
-        plazos = load_json(PLAZOS_FILE)
+        plazos = load_json("plazos")
         return {"plazos": plazos, "count": len(plazos)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -624,7 +645,7 @@ def list_plazos():
 def create_plazo(payload: dict):
     """Crea un nuevo plazo/vencimiento."""
     try:
-        plazos = load_json(PLAZOS_FILE)
+        plazos = load_json("plazos")
         
         plazo = {
             "id": f"PLZ-{len(plazos)+1:03d}",
@@ -637,7 +658,7 @@ def create_plazo(payload: dict):
             "created_at": datetime.now().isoformat()
         }
         plazos.append(plazo)
-        save_json(PLAZOS_FILE, plazos)
+        save_json("plazos", plazos)
         
         # Crear evento en Calendar si hay credenciales
         try:
@@ -653,7 +674,7 @@ def create_plazo(payload: dict):
         except Exception as e:
             plazo["calendar_error"] = str(e)
         
-        save_json(PLAZOS_FILE, plazos)
+        save_json("plazos", plazos)
         
         return {"plazo": plazo, "message": "Plazo creado"}
     except Exception as e:
@@ -664,8 +685,8 @@ def create_plazo(payload: dict):
 def list_aprobaciones():
     """Lista documentos pendientes de aprobación."""
     try:
-        aprobaciones = load_json(APROBACIONES_FILE)
-        documentos = load_json(DOCUMENTOS_FILE)
+        aprobaciones = load_json("aprobaciones")
+        documentos = load_json("documentos")
         # Fusionar documentos con estado de aprobación
         pendientes = [d for d in documentos if d.get("estado") in ["borrador", "generado", "revision"]]
         return {"aprobaciones": pendientes, "count": len(pendientes)}
@@ -676,7 +697,7 @@ def list_aprobaciones():
 def aprobar_documento_endpoint(aprobacion_id: str, payload: dict = {}):
     """Aprueba un documento pendiente."""
     try:
-        documentos = load_json(DOCUMENTOS_FILE)
+        documentos = load_json("documentos")
         doc = next((d for d in documentos if d["id"] == aprobacion_id), None)
         if not doc:
             raise HTTPException(status_code=404, detail="Documento no encontrado")
@@ -686,7 +707,7 @@ def aprobar_documento_endpoint(aprobacion_id: str, payload: dict = {}):
         doc["fecha_aprobacion"] = datetime.now().isoformat()
         doc["comentario_aprobacion"] = payload.get("comentario", "")
         
-        save_json(DOCUMENTOS_FILE, documentos)
+        save_json("documentos", documentos)
         
         return {"aprobacion": doc, "message": "Documento aprobado"}
     except HTTPException:
@@ -698,7 +719,7 @@ def aprobar_documento_endpoint(aprobacion_id: str, payload: dict = {}):
 @app.get("/api/matters/{matter_id}/drive-folder")
 def get_drive_folder(matter_id: str):
     """Obtener link de carpeta en Drive."""
-    matters = load_json(MATTERS_FILE)
+    matters = load_json("matters")
     matter = next((m for m in matters if m.get("id") == matter_id), None)
     
     if not matter or not matter.get("drive_folder_id"):
@@ -717,7 +738,7 @@ def get_drive_documents(matter_id: str):
         from scripts.drive_manager import DriveManager
         dm = DriveManager()
         
-        matters = load_json(MATTERS_FILE)
+        matters = load_json("matters")
         matter = next((m for m in matters if m.get("id") == matter_id), None)
         
         if not matter:
@@ -829,7 +850,7 @@ def construir_bloques_desde_matter(matter: Dict, template_key: str, datos_extra:
 def get_drive_link(matter_id: str):
     """Obtiene el link de Google Drive para un matter"""
     try:
-        matters = load_json(MATTERS_FILE)
+        matters = load_json("matters")
         matter = next((m for m in matters if m.get("id") == matter_id), None)
         
         if not matter:
@@ -857,8 +878,8 @@ def export_to_sheets(payload: dict = {}):
         tipo = payload.get("tipo", "resumen")
         
         if tipo == "resumen":
-            matters = load_json(MATTERS_FILE)
-            finanzas = load_json(FINANZAS_FILE)
+            matters = load_json("matters")
+            finanzas = load_json("finanzas")
             
             resumen = finanzas.get("resumen", {}) if isinstance(finanzas, dict) else {}
             
@@ -900,7 +921,7 @@ def export_to_docs(payload: dict = {}):
 def sync_excel_endpoint():
     """Sincroniza datos con Excel PM maestro"""
     try:
-        matters = load_json(MATTERS_FILE)
+        matters = load_json("matters")
         
         return {
             "message": "Sincronización completa",
@@ -970,8 +991,8 @@ def get_calendar_events_endpoint():
 def check_plazos_endpoint():
     """Ejecuta verificación de plazos vencidos"""
     try:
-        plazos = load_json(PLAZOS_FILE)
-        alertas = load_json(ALERTAS_FILE)
+        plazos = load_json("plazos")
+        alertas = load_json("alertas")
         
         nuevas_alertas = []
         hoy = datetime.now().date()
@@ -1000,7 +1021,7 @@ def check_plazos_endpoint():
         # Guardar nuevas alertas
         if nuevas_alertas:
             alertas.extend(nuevas_alertas)
-            save_json(ALERTAS_FILE, alertas)
+            save_json("alertas", alertas)
         
         return {
             "message": "Verificación completa",

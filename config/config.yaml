@@ -1,0 +1,41 @@
+version: "2.0"
+despacho:
+  nombre: "We Law S.C."
+  rfc: "WEL123456ABC"
+  representante: "Lic. Pablo Meneses"
+  email: "contacto@welaw.mx"
+  domicilio: "Ciudad de México"
+  telefono: ""
+
+datastore:
+  type: "json"
+  path: "~/.willowlegal/data/"
+  backup_dir: "~/.willowlegal/backups/"
+  backup_interval_hours: 24
+
+ids:
+  matter_prefix: "WIL"
+  document_prefix: "DOC"
+  padding: 3
+
+motor_kami:
+  templates_dir: "motor_kami/templates/"
+  output_dir: "~/.willowlegal/output/"
+  css_theme: "kami_v2"
+
+google_workspace:
+  enabled: false
+  credentials_path: "~/.willowlegal/config/client_secret.json"
+  token_path: "~/.willowlegal/config/token.json"
+  base_folder: "WillowLegal"
+
+auth:
+  enabled: false
+  type: "api_key"
+  api_key_header: "X-API-Key"
+
+notifications:
+  telegram:
+    enabled: false
+    bot_token_env: "TELEGRAM_BOT_TOKEN"
+    chat_id_env: "TELEGRAM_HOME_CHAT_ID"
