@@ -17,6 +17,7 @@ class JSONDatastore:
         
         self.files = {
             "matters": self.base_path / "matters.json",
+            "expedientes": self.base_path / "expedientes.json",
             "documentos": self.base_path / "documentos.json",
             "reuniones": self.base_path / "reuniones.json",
             "alertas": self.base_path / "alertas.json",
@@ -24,6 +25,7 @@ class JSONDatastore:
             "plazos": self.base_path / "plazos.json",
             "aprobaciones": self.base_path / "aprobaciones.json",
             "usuarios": self.base_path / "usuarios.json",
+            "clientes": self.base_path / "clientes.json",
             "session": self.base_path / "session.json"
         }
         
@@ -34,6 +36,7 @@ class JSONDatastore:
     def _default_data(self, name: str) -> Any:
         defaults = {
             "matters": [],
+            "expedientes": [],
             "documentos": [],
             "reuniones": [],
             "alertas": [],
@@ -41,7 +44,8 @@ class JSONDatastore:
             "plazos": [],
             "aprobaciones": [],
             "usuarios": [],
-            "session": {"matter_active": None}
+            "clientes": [],
+            "session": {"matter_active": None, "expediente_activo": None}
         }
         return defaults.get(name, [])
     

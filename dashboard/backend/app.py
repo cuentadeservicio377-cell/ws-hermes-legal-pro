@@ -146,17 +146,67 @@ def health():
 # ── Dashboard ───────────────────────────────────────────────
 @app.get("/api/dashboard")
 def dashboard():
-    """KPIs y resumen para el dashboard principal"""
+    """KPIs y resumen para el dashboard principal - Adaptado para despacho judicial"""
+    # Intentar cargar expedientes primero (nuevo modelo), fallback a matters
+    expedientes = load_json("expedientes")
     matters = load_json("matters")
-    reuniones = load_json("reuniones")
+    clientes = load_json("clientes")
     alertas = load_json("alertas")
-    documentos = load_json("documentos")
+    plazos = load_json("plazos")
     
     hoy = date.today().isoformat()
     
+    # Si hay expedientes migrados, usar modelo judicial
+    if expedientes:
+        exp_activos = [e for e in expedientes if e.get("estado") == "activo"]
+        exp_caducidad = [e for e in expedientes if e.get("estado") == "caducidad"]
+        exp_terminados = [e for e in expedientes if e.get("estado") == "terminado"]
+        
+        # Alertas pendientes
+        alertas_pendientes = [a for a in alertas if a.get("estado") == "pendiente"]
+        
+        # Expedientes con pendientes
+        exp_con_pendientes = [e for e in expedientes if e.get("pendientes")]
+        
+        # Próximos plazos (si existen)
+        proximos_plazos = []
+        for p in plazos:
+            if p.get("fecha_limite"):
+                dias = calcular_dias_restantes(p["fecha_limite"])
+                if dias is not None and dias <= 7:
+                    proximos_plazos.append({
+                        "plazo_id": p.get("plazo_id"),
+                        "expediente_id": p.get("expediente_id"),
+                        "fecha_limite": p["fecha_limite"],
+                        "dias_restantes": dias,
+                        "descripcion": p.get("descripcion", "Sin descripción"),
+                        "es_fatal": p.get("es_fatal", False)
+                    })
+        proximos_plazos.sort(key=lambda x: x["dias_restantes"])
+        
+        return {
+            "kpis": {
+                "expedientes_activos": len(exp_activos),
+                "expedientes_caducidad": len(exp_caducidad),
+                "expedientes_terminados": len(exp_terminados),
+                "total_expedientes": len(expedientes),
+                "total_clientes": len(clientes),
+                "alertas_pendientes": len(alertas_pendientes),
+                "expedientes_con_pendientes": len(exp_con_pendientes),
+                "plazos_proximos": len(proximos_plazos)
+            },
+            "proximos_plazos": proximos_plazos[:5],
+            "alertas_urgentes": alertas_pendientes[:5],
+            "expedientes_recientes": expedientes[-5:][::-1],
+            "modelo": "judicial"
+        }
+    
+    # Fallback al modelo antiguo (matters)
     matters_activos = [m for m in matters if m.get("estado") == "activo"]
     matters_urgentes = [m for m in matters_activos if m.get("prioridad") == "alta"]
+    reuniones = load_json("reuniones")
     reuniones_hoy = [r for r in reuniones if r.get("fecha") == hoy]
+    documentos = load_json("documentos")
     docs_pendientes = [d for d in documentos if d.get("estado") == "borrador"]
     alertas_activas = [a for a in alertas if not a.get("resuelta")]
     
@@ -184,8 +234,93 @@ def dashboard():
         },
         "proximos_plazos": proximos_plazos[:5],
         "reuniones_recientes": reuniones[-5:][::-1],
-        "alertas": alertas_activas[:5]
+        "alertas": alertas_activas[:5],
+        "modelo": "legacy"
     }
+
+# ── Expedientes (nuevo modelo judicial) ────────────────────
+@app.get("/api/expedientes")
+def list_expedientes(estado: Optional[str] = None, tipo_juicio: Optional[str] = None, juzgado: Optional[str] = None):
+    """Listar expedientes judiciales con filtros"""
+    expedientes = load_json("expedientes")
+    if estado:
+        expedientes = [e for e in expedientes if e.get("estado") == estado]
+    if tipo_juicio:
+        expedientes = [e for e in expedientes if tipo_juicio.upper() in e.get("tipo_juicio", "").upper()]
+    if juzgado:
+        expedientes = [e for e in expedientes if juzgado.upper() in e.get("juzgado", "").upper()]
+    return expedientes
+
+@app.get("/api/expedientes/{expediente_id}")
+def get_expediente(expediente_id: str):
+    """Obtener un expediente por ID"""
+    expedientes = load_json("expedientes")
+    for e in expedientes:
+        if e.get("expediente_id") == expediente_id:
+            # Enriquecer con datos del cliente
+            clientes = load_json("clientes")
+            for c in clientes:
+                if c.get("cliente_id") == e.get("cliente_id"):
+                    e["cliente_data"] = c
+                    break
+            # Enriquecer con alertas relacionadas
+            alertas = load_json("alertas")
+            e["alertas_relacionadas"] = [a for a in alertas if a.get("expediente_id") == expediente_id]
+            return e
+    raise HTTPException(status_code=404, detail="Expediente no encontrado")
+
+@app.get("/api/expedientes/{expediente_id}/alertas")
+def get_expediente_alertas(expediente_id: str):
+    """Obtener alertas de un expediente"""
+    alertas = load_json("alertas")
+    return [a for a in alertas if a.get("expediente_id") == expediente_id]
+
+# ── Clientes ────────────────────────────────────────────────
+@app.get("/api/clientes")
+def list_clientes(tipo: Optional[str] = None):
+    """Listar clientes del despacho"""
+    clientes = load_json("clientes")
+    if tipo:
+        clientes = [c for c in clientes if c.get("tipo") == tipo]
+    return clientes
+
+@app.get("/api/clientes/{cliente_id}")
+def get_cliente(cliente_id: str):
+    """Obtener un cliente por ID con sus expedientes"""
+    clientes = load_json("clientes")
+    expedientes = load_json("expedientes")
+    for c in clientes:
+        if c.get("cliente_id") == cliente_id:
+            # Enriquecer con expedientes relacionados
+            c["expedientes"] = [e for e in expedientes if e.get("cliente_id") == cliente_id]
+            return c
+    raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+@app.get("/api/clientes/{cliente_id}/expedientes")
+def get_cliente_expedientes(cliente_id: str):
+    """Obtener expedientes de un cliente"""
+    expedientes = load_json("expedientes")
+    return [e for e in expedientes if e.get("cliente_id") == cliente_id]
+
+# ── Alertas ─────────────────────────────────────────────────
+@app.get("/api/alertas")
+def list_alertas(estado: Optional[str] = None, prioridad: Optional[str] = None):
+    """Listar alertas con filtros"""
+    alertas = load_json("alertas")
+    if estado:
+        alertas = [a for a in alertas if a.get("estado") == estado]
+    if prioridad:
+        alertas = [a for a in alertas if a.get("prioridad") == prioridad]
+    return alertas
+
+@app.get("/api/alertas/{alerta_id}")
+def get_alerta(alerta_id: str):
+    """Obtener una alerta por ID"""
+    alertas = load_json("alertas")
+    for a in alertas:
+        if a.get("alerta_id") == alerta_id:
+            return a
+    raise HTTPException(status_code=404, detail="Alerta no encontrada")
 
 # ── Matters ───────────────────────────────────────────────
 @app.get("/api/matters")
